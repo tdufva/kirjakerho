@@ -12,7 +12,7 @@ export interface ImportRecord { id: string; filename: string; fingerprint: strin
 export interface Archive { version: 1; mode: 'demo' | 'local' | 'cloud'; members: Member[]; works: Work[]; imports: ImportRecord[] }
 export const categories: Record<Category, string> = { book: 'Kirjat', theatre: 'Teatteri', exhibition: 'Näyttelyt', other: 'Muu kulttuuri' }
 export const categorySingular: Record<Category, string> = { book: 'Kirja', theatre: 'Teatteri', exhibition: 'Näyttely', other: 'Muu kulttuuri' }
-export const memberColors = ['#752F38', '#467773', '#9B7527', '#62567A']
+export const memberColors = ['#6E6121', '#4C4743', '#BC6438', '#A5AB87']
 export function normalize(value: string): string { return value.normalize('NFKC').toLocaleLowerCase('fi').replace(/[\p{P}\p{S}]/gu, ' ').replace(/\s+/g, ' ').trim() }
 export function workKey(w: Pick<Work, 'title' | 'creator' | 'category' | 'date'>): string { return [normalize(w.title), normalize(w.creator), w.category, w.category === 'book' ? '' : (w.date ?? '')].join('|') }
 // Stable UUID-shaped identifier, independent of workbook sheet/row order. Not used as a secret.

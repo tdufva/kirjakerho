@@ -1,0 +1,15 @@
+# Jazz Club — art direction
+
+Colour reference: [ColorArchive Jazz Club](https://colorarchive.org/collections/jazz-club/).
+
+The six palette colours are #6E6121 (deep amber), #AB9387 (taupe), #A5AB87 (sage), #4C4743 (warm shadow), #FAFAF9 (ivory), and #BC6438 (copper). Interface tints are mixtures of these colours. Contrast-sensitive text and buttons use warm shadow or deep amber against ivory.
+
+The visual direction is a late-1920s jazz club: lithographic illustration, engraved detail, tungsten light, smoke, brass instruments and Art Deco print details. Decorative stars and asterisks are removed throughout the application. Book jackets are original code-based Art Deco ornaments rather than reproductions of the real books' covers.
+
+Illustration generated with the built-in ImageGen tool. Project assets: `public/images/jazz-club-1928.webp` and `public/images/jazz-club-1928-small.webp`. WebP files are resized/encoded versions of the generated artwork; the original image remains in the generation library.
+
+## Final generation prompt
+
++Use case: historical-scene. Asset type: finished editorial illustration for a Finnish book-club website, a portrait 4:5 illustrated plate, not a UI mockup. Create a richly detailed, authentic late-1920s smoky jazz-club interior, as a sophisticated 1928 European Art Deco colour lithograph with ink drawing, fine engraved hatching, gouache colour blocks and subtly worn paper texture. A live small jazz band plays on a shallow stage: an expressive saxophonist in the foreground, a cornet player, an upright piano and double bass further back. Natural, anatomically convincing hands and period-correct instruments, tailored dinner jackets, white shirts, waistcoats and evening dress. At the bottom edge, two seated club guests seen in profile and a small round polished-wood table with a book resting beside a glass. Behind the musicians: a dark curtain, stepped Art Deco architectural panels, hanging amber lamps. Visible layered smoke curls and hazy tungsten light shafts weave through the scene. Lively diagonal rhythm, elegant elongated silhouettes balanced with precise faces, fabrics, instrument keys, brass reflections and decorative interior details. It must feel like a genuinely illustrated jazz-club scene from the 1920s, intimate, nocturnal, sophisticated and swinging, not a generic geometric mid-century record sleeve. Use strictly this harmonious six-colour print palette and tonal tints: warm dark grey #4C4743, deep amber/olive brass #6E6121, warm copper #BC6438, muted taupe #AB9387, muted sage #A5AB87, warm near-white #FAFAF9. Dark warm-grey shadows dominate with amber and copper illumination and ivory smoke. Portrait composition with breathing room around the outer edge, musicians and smoke clearly recognizable at web size. No text, no letters, no logos, no watermark, no stars, no asterisks, no starbursts, no sparkle motifs, no vinyl record, no turntable, no neon, no modern microphone, no modern furniture, no photography or 3D rendering.
+
+Bodoni Moda is served locally under the SIL Open Font License; its license is included in `public/fonts/licenses/`.

@@ -43,7 +43,7 @@ const entries: Entry[] = [
  ['Ystävä','Sigrid Nunez',2018,'2026-04-12',['Ystävyys','Muisti'],'Yhdysvallat',40.7,-74.0,[9,8,10,8]],
  ['Meren äärellä','Abdulrazak Gurnah',2001,'2026-09-20',['Muisti','Matka'],'Tansania',-6.2,39.2,[10,9,9,9]]
 ]
-const colors = ['#752F38','#467773','#C5A04A','#D3B59B','#4B5761','#A46247']
+const colors = ['#6E6121','#4C4743','#BC6438','#AB9387','#A5AB87','#4C4743']
 export function demoArchive(): Archive {
  const works: Work[] = entries.map(([title,creator,publicationYear,date,themes,country,lat,lon,ratings,category = 'book'],i) => ({
   id: stableId(`demo:${title}`), title, creator, publicationYear, date, themes, category,

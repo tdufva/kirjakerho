@@ -2,7 +2,7 @@
 
 [Open the app](https://tdufva.github.io/kirjakerho/) · [GitHub repository](https://github.com/tdufva/kirjakerho)
 
-A Finnish literary and cultural archive PWA for a private book club. React 19, strict TypeScript, Vite, Tailwind 4, React Router, SheetJS, IndexedDB, and Supabase. Fraunces and DM Sans are served locally.
+A Finnish literary and cultural archive PWA for a private book club. React 19, strict TypeScript, Vite, Tailwind 4, React Router, SheetJS, IndexedDB, and Supabase. Bodoni Moda and DM Sans are served locally. The visual identity uses the [ColorArchive Jazz Club palette](https://colorarchive.org/collections/jazz-club/), a detailed 1920s jazz-club illustration, and Art Deco book-jacket ornaments.
 
 ## Run locally
 
@@ -136,4 +136,12 @@ Navigation vocabulary is centralized, but full translation catalog extraction re
 
 ## Licenses
 
-Fraunces and DM Sans: SIL Open Font License (included under `public/fonts/licenses`). Natural Earth: public-domain map data from [naturalearthdata.com](https://www.naturalearthdata.com/about/terms-of-use/), geometry from its official [vector repository](https://github.com/nvkelso/natural-earth-vector). Lucide: ISC. SheetJS: Apache-2.0. Book titles/author names identify real published works; demo commentary and cover illustrations were created for this application.
+Bodoni Moda, Fraunces and DM Sans: SIL Open Font License (included under `public/fonts/licenses`). Natural Earth: public-domain map data from [naturalearthdata.com](https://www.naturalearthdata.com/about/terms-of-use/), geometry from its official [vector repository](https://github.com/nvkelso/natural-earth-vector). Lucide: ISC. SheetJS: Apache-2.0. Book titles/author names identify real published works; demo commentary and cover illustrations were created for this application.
+
+## Jazz Club visual identity
+
+The six theme colours are the exact ColorArchive Jazz Club palette: `#6E6121`, `#AB9387`, `#A5AB87`, `#4C4743`, `#FAFAF9`, `#BC6438`. Semantic tints mix these colours. Dark amber and warm shadow anchor readable controls; sage and copper provide illustration and chart accents. Stored member or cover colours from earlier imports are rendered through the new theme without changing archive content.
+
+The new artwork is an original ImageGen illustration in the manner of a late-1920s colour lithograph: jazz musicians, period evening dress, engraved detail, smoke and tungsten lamps. WebP variants are bundled locally and precached for offline use. All decorative star/asterisk motifs have been removed, including logos, placeholders, cover jackets, member profiles and loading screens.
+
+See [art direction, saved asset paths and the complete ImageGen prompt](docs/design/jazz-club-art-direction.md).
