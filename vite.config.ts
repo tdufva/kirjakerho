@@ -13,7 +13,7 @@ export default defineConfig({
     manifest: {
       name: 'Kirjakerhon Atlas', short_name: 'Atlas', lang: 'fi',
       description: 'Kirjoja, kulttuuria ja yhteisiä mielipiteitä.',
-      theme_color: '#4C4743', background_color: '#FAFAF9', display: 'standalone',
+      theme_color: '#1C1713', background_color: '#1C1713', display: 'standalone',
       id: base, start_url: base, scope: base,
       icons: [
         { src: `${base}icon-192.png`, sizes: '192x192', type: 'image/png' },

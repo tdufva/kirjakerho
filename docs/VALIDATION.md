@@ -45,3 +45,11 @@ The 36 existing tests pass, TypeScript checks pass and the production build succ
 ## Quiet literary imagery
 
 Replaced the musician illustration with two new original, people-free images: an empty smoky salon and a quiet library reading corner. Sinuhe egyptiläinen appears as a visual reference on original generic book bindings. Hero, welcome and the home Atlas invitation use the new assets. The old people-containing WebP files were removed from published assets. TypeScript and the production build pass; all four responsive WebP variants are included in the PWA precache. Archive entries and ratings are unchanged.
+
+## App-wide warm night theme
+
+All 36 tests and the TypeScript check pass. The production build contains the dark CSS and declares #1C1713 for both manifest theme and launch background; HTML declares a dark colour scheme and a black iOS status bar.
+
+Browser inspection at 1440 × 1050 covered welcome, home through its footer, archive grid/list and expanded filters, work details and the Atlas editing dialog, profiles and correlation selection, all four Atlas tabs, settings and the restore dialog. At 390 × 844, import, archive filters, correlation selection and mobile navigation were checked. The archive's year filter returned four works for 2023, the selected pair showed Aino & Leena at 0.46, and Finland showed 12 works. Phone document width equalled its scroll width; the dense matrix and chart keep their intended internal scrolling. No console errors or decorative star glyphs were found.
+
+Calculated sRGB contrast on the darkest through the lightest main UI surfaces: primary text ≥10.88:1, secondary text ≥6.62:1, action/chart accents ≥6.59:1, and control borders ≥3.50:1. Browser computed styles confirmed dark inputs, dialogs and mobile navigation. These focused checks do not constitute a complete accessibility audit or an actual-device installation test.

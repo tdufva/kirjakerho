@@ -2,7 +2,11 @@
 
 Colour reference: [ColorArchive Jazz Club](https://colorarchive.org/collections/jazz-club/).
 
-The six palette colours remain #6E6121 (deep amber), #AB9387 (taupe), #A5AB87 (sage), #4C4743 (warm shadow), #FAFAF9 (ivory), and #BC6438 (copper). Typography and readable interface contrast are preserved.
+The six palette colours remain #6E6121 (deep amber), #AB9387 (taupe), #A5AB87 (sage), #4C4743 (warm shadow), #FAFAF9 (ivory), and #BC6438 (copper).
+
+The entire interface continues the room's after-hours atmosphere. `src/night.css` defines the warm night skin: #1C1713 background, #302720 surfaces, #241D18 fields and dialogs, #3B2F25 raised surfaces, #F3EADD primary text and #C6B7A5 secondary text. Brass #DFD6A9, light copper #DAB09B and sage #BBC29A illuminate actions and data. Dark olive and walnut gradients add material depth. Broad panels remain dark throughout home, archive, profiles, Atlas, work details, import and settings. Native form controls and the PWA launch background also declare a dark colour scheme.
+
+Data colours use lighter counterparts of the original avatar colours, while book bindings retain the original palette. Matrix cells mix those light accents into a dark surface rather than white. This keeps the statistical views readable without introducing pale dashboard panels.
 
 The imagery now uses empty, smoky old interiors and literary still lifes, without people, musicians, portraits or overt jazz symbols. Mika Waltari's Sinuhe egyptiläinen is a visual literary reference; the depicted bindings are original generic designs rather than copies of a published cover. No work or fictional rating is added to the archive by this visual change.
 

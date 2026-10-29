@@ -140,7 +140,7 @@ Bodoni Moda, Fraunces and DM Sans: SIL Open Font License (included under `public
 
 ## Jazz Club visual identity
 
-The six theme colours are the exact ColorArchive Jazz Club palette: `#6E6121`, `#AB9387`, `#A5AB87`, `#4C4743`, `#FAFAF9`, `#BC6438`. Semantic tints mix these colours. Dark amber and warm shadow anchor readable controls; sage and copper provide illustration and chart accents. Stored member or cover colours from earlier imports are rendered through the new theme without changing archive content.
+The visual identity starts with the exact ColorArchive Jazz Club palette: `#6E6121`, `#AB9387`, `#A5AB87`, `#4C4743`, `#FAFAF9`, `#BC6438`. The whole application uses a warm night theme: near-black walnut backgrounds, darker olive and copper panels, ivory text and brass actions. Charts use lighter counterparts of the palette so their marks remain visible on dark surfaces. Inputs, native menus, dialogs, mobile navigation and the installed PWA shell use the same dark appearance. Stored member or cover colours from earlier imports are rendered through the theme without changing archive content.
 
 The artwork consists of original ImageGen atmospheric scenes: empty smoky salons, quiet old library corners, warm lamplight and Finnish literary still lifes centred on Mika Waltari’s Sinuhe egyptiläinen. There are no people, musicians, portraits or overt jazz symbols. The depicted book bindings are original generic typographic designs, not reproductions of an existing edition. WebP variants are bundled locally and precached for offline use. All decorative star/asterisk motifs have been removed, including logos, placeholders, cover jackets, member profiles and loading screens.
 
