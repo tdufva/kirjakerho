@@ -41,3 +41,7 @@ The repository is `tdufva/kirjakerho`. The project build uses `/kirjakerho/` as 
 The six ColorArchive Jazz Club swatches are implemented as shared theme tokens. The new original 1920s-style illustration is served as local 1120 px and 640 px WebP assets and included in the PWA precache. Bodoni Moda fonts and license are bundled. Decorative stars were removed from all screen components and icons. Browser inspection verified no star glyphs in rendered home/archive content and no horizontal overflow at 1440 px and 390 px. The archive's original 38 demo works remained intact.
 
 The 36 existing tests pass, TypeScript checks pass and the production build succeeds. A stale lazy-chunk failure observed while replacing a running preview build led to a one-time application-shell refresh handler; IndexedDB data is retained. The PWA update button was exercised successfully in the preview.
+
+## Quiet literary imagery
+
+Replaced the musician illustration with two new original, people-free images: an empty smoky salon and a quiet library reading corner. Sinuhe egyptiläinen appears as a visual reference on original generic book bindings. Hero, welcome and the home Atlas invitation use the new assets. The old people-containing WebP files were removed from published assets. TypeScript and the production build pass; all four responsive WebP variants are included in the PWA precache. Archive entries and ratings are unchanged.
