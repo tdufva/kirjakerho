@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useId, type ReactNode } from 'react'
 import { ArrowUpRight, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Work } from '../domain/model'
@@ -19,9 +19,9 @@ export function WorkCard({work,index}:{work:Work;index?:number}) {return <Link t
  <p className="work-creator">{work.creator}</p><h3>{work.title}</h3><p className="work-sub">{work.date?.slice(0,4)??'Ei päiväystä'}<span>·</span>{work.ratings.length} arviota</p>
  </Link>}
 export function Modal({title,children,onClose}:{title:string;children:ReactNode;onClose:()=>void}) {
- const ref=useRef<HTMLDialogElement>(null)
+ const ref=useRef<HTMLDialogElement>(null), titleId=useId()
  useEffect(()=>{const el=ref.current;el?.showModal();return()=>el?.close()},[])
- return <dialog ref={ref} onCancel={e=>{e.preventDefault();onClose()}} className="modal"><div className="modal-top"><h2>{title}</h2><button className="icon-button" onClick={onClose} aria-label="Sulje"><X/></button></div>{children}</dialog>
+ return <dialog ref={ref} aria-labelledby={titleId} onCancel={e=>{e.preventDefault();onClose()}} className="modal"><div className="modal-top"><h2 id={titleId}>{title}</h2><button className="icon-button" onClick={onClose} aria-label="Sulje"><X/></button></div>{children}</dialog>
 }
 export function Empty({children}:{children:ReactNode}) {return <div className="empty-state"><span className="asterisk">✳</span>{children}</div>}
 export function ErrorText({message}:{message:string}) {return message?<p className="error-text" role="alert">{message}</p>:null}
