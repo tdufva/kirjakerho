@@ -1,7 +1,8 @@
+import { appUrl } from './urls'
 import { createClient } from '@supabase/supabase-js'
 import type { Archive, Member, Work, Rating, ImportRecord, Metadata } from '../domain/model'
 const url=import.meta.env.VITE_SUPABASE_URL,key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-export const supabase=url&&key?createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null
+export const supabase=url&&key?createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}}):null
 export interface Club {id:string;name:string;revision:number;role:'admin'|'member'|'reader'}
 export function canManage(role:string|undefined):boolean {return role==='admin'}
 export async function listClubs():Promise<Club[]> {
@@ -34,7 +35,7 @@ export async function createClub(name:string):Promise<string> {
 }
 export async function createInvitation(clubId:string,email:string,role:'member'|'reader'):Promise<string> {
  const {data,error}=await supabase!.rpc('create_invitation',{p_club_id:clubId,p_email:email,p_role:role});if(error) throw error
- const url=new URL(window.location.origin);url.searchParams.set('invitation',data);return url.toString()
+ const url=appUrl('/asetukset');url.searchParams.set('invitation',data);return url.toString()
 }
 export async function acceptInvitation(token:string) {
  const {data,error}=await supabase!.rpc('accept_invitation',{p_token:token});if(error) throw error;return data as string

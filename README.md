@@ -1,5 +1,7 @@
 # Kirjakerhon Atlas
 
+[Open the app](https://tdufva.github.io/kirjakerho/) · [GitHub repository](https://github.com/tdufva/kirjakerho)
+
 A Finnish literary and cultural archive PWA for a private book club. React 19, strict TypeScript, Vite, Tailwind 4, React Router, SheetJS, IndexedDB, and Supabase. Fraunces and DM Sans are served locally.
 
 ## Run locally
@@ -7,12 +9,13 @@ A Finnish literary and cultural archive PWA for a private book club. React 19, s
 Requires Node.js 22.12+ and pnpm 11.25.0.
 
 ```sh
-cd atlas
+git clone https://github.com/tdufva/kirjakerho.git
+cd kirjakerho
 pnpm install
 pnpm dev
 ```
 
-Open the URL printed by Vite. From this directory, omit `cd atlas`.
+Open the URL printed by Vite. If you already have this checkout, run the pnpm commands from its root.
 
 ```sh
 pnpm test
@@ -49,7 +52,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 
 Use the project's **publishable** key, never a service-role or secret key. These two Vite variables are intentionally public configuration protected by database authorization. Changes require a rebuild.
 
-4. Enable email sign-in in Supabase Auth. Configure the production Site URL and allowed redirect URLs (`http://127.0.0.1:5173/asetukset` for local development; `https://YOUR_DOMAIN/asetukset` for production). Configure a real SMTP provider before inviting members; development email limits are not a production mail service.
+4. Enable email sign-in in Supabase Auth. Configure the production Site URL and allowed redirect URLs (`http://127.0.0.1:5173/` for local development; `https://tdufva.github.io/kirjakerho/` for production). Routes are URL fragments (for example `#/asetukset`); configure the callback at the app root. Passwordless authentication uses PKCE, leaving fragments available for client routing. Configure a real SMTP provider before inviting members; development email limits are not a production mail service.
 5. Restart Vite or rebuild the production app. Sign in from **Asetukset**, create a club and import its Excel archive. Send generated invitation links yourself. Invitations expire after seven days, can be used once, and require the recipient's verified email.
 6. Sign in on a second device, accept an invitation, and verify that a subsequent administrator import appears there. Try an offline read after a successful sync and reconnect afterwards.
 7. Review Supabase's security advisors on the deployed schema. Local tests exercise PostgreSQL RLS and RPCs, but do not replace a live Supabase deployment audit.
@@ -86,15 +89,28 @@ Source documentation: [Supabase email login](https://supabase.com/docs/reference
 
 ## Deploy
 
-This is a static application. Build with `pnpm build` and serve `dist/` over HTTPS. Configure every application route to fall back to `index.html`; `_redirects` is included for compatible hosts. Do not cache `index.html` or `sw.js` indefinitely. HTTPS (or localhost) is required for installation, Web Crypto and the service worker.
+This is a static application. Build with `pnpm build` and serve `dist/` over HTTPS. The app uses hash routes so refreshes work on a static host without route rewriting; `_redirects` is included for compatible alternate hosts. Do not cache `index.html` or `sw.js` indefinitely. HTTPS (or localhost) is required for installation, Web Crypto and the service worker.
 
-`.openai/hosting.json` declares a private Sites deployment. Vite configuration is compiled into static assets; set cloud environment variables before building. An owner-private preview allows the owner to inspect the app; access for all four club members additionally requires a suitable hosting audience/domain and Supabase memberships. Hosting access and book club membership are separate controls.
+GitHub Pages is the primary host at **https://tdufva.github.io/kirjakerho/**. The repository is **tdufva/kirjakerho**. `.github/workflows/pages.yml` tests and builds every push to `main`, then publishes `dist/` using GitHub's Pages artifact deployment. Configure repository **Settings → Pages → Source → GitHub Actions** (already enabled for this repository).
+
+The workflow sets `VITE_BASE_PATH=/kirjakerho/`. Assets, the map, manifest and service worker stay inside that project path. Hash-based routes such as `/kirjakerho/#/arkisto` refresh correctly without a server-side SPA rewrite. Native GitHub Pages does not support `_redirects` or `_headers`; those files are only for alternate compatible hosts.
+
+To connect Supabase on GitHub Pages, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as repository Actions **variables**, then rerun the deployment workflow. Both are public client configuration; never add a service-role key. Set Supabase's Site URL and redirect allow-list to the Pages app root. Supabase club membership controls access to actual cloud archive data; the static demo and application shell are public.
+
+To reproduce the project build locally:
+
+```sh
+VITE_BASE_PATH=/kirjakerho/ pnpm build
+VITE_BASE_PATH=/kirjakerho/ pnpm preview
+```
+
+No ChatGPT account is needed for the GitHub Pages application. The previous ChatGPT Sites address is retired separately after Pages publication. Browser-local archives are scoped to their original site: an Excel import made on the old origin must be reimported on the new origin. Cloud data continues to use the configured Supabase project once that integration is enabled.
 
 Low-cost alternatives include Cloudflare Pages and Netlify. Keep all service secrets server-side if adding a provider that needs credentials. This release's public catalog queries need no secret API keys.
 
 ### Verify installation and updates
 
-- In production, confirm `/manifest.webmanifest`, `/sw.js` and both PNG icons return successfully.
+- In production, confirm `/kirjakerho/manifest.webmanifest`, `/kirjakerho/sw.js` and both PNG icons return successfully.
 - Open the app once online, navigate through the archive, then test an offline reload. Auth and metadata requests remain network-only; private API responses are never cached in the service worker.
 - On iPhone/iPad, open in Safari → Share → Add to Home Screen. Test on an actual device; browser viewport checks do not prove iOS standalone installation.
 - Publish a changed version and accept the update prompt to refresh the shell.

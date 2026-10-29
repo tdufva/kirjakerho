@@ -31,3 +31,7 @@ Evidence screenshots were saved outside the source tree under `/private/tmp/atla
 ## Verification limits
 
 No dedicated Supabase project was provided or created; an unrelated existing project was left untouched. Live email delivery, real Supabase Auth sessions, hosted RLS advisors, Realtime between two physical devices and live cross-device synchronization remain unverified until setup. Browser-size checks do not prove actual iOS installation, safe-area behavior or VoiceOver behavior. Offline IndexedDB behavior and the generated service worker are verified separately; an actual device offline/standalone test remains necessary. Public catalog integrations are prepared with explicit user confirmation and graceful error handling; live responses vary by provider.
+
+## GitHub Pages migration
+
+The repository is `tdufva/kirjakerho`. The project build uses `/kirjakerho/` as its asset, manifest and service-worker base. Hash routes refresh without GitHub Pages rewrites. Three additional tests cover project-path links and invitation query parameters (36 tests total). Original 33 domain/import/authorization tests continue to pass. Supabase callbacks use PKCE so authentication does not occupy the routing fragment. Deployment is handled by the pinned Actions workflow in `.github/workflows/pages.yml`.
