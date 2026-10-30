@@ -4,6 +4,7 @@ import App from './App'
 import './styles.css'
 import './jazz.css'
 import './night.css'
+import './paint.css'
 // A deployed build may replace a lazy chunk while this tab is still open.
 // Refresh the application shell once, keeping the user's IndexedDB archive intact.
 window.addEventListener('vite:preloadError', event => {

@@ -19,7 +19,7 @@ Edited from the original empty-room images with the built-in ImageGen tool, usin
 
 Earlier photographic WebP assets are removed from the published directory. The original generations remain in the image library; the final WebP files are only resized and encoded for the web. Generated painting sources are `exec-d31ff2f9-3c12-48e7-9e24-ca3c10df1f4c.png` (salon) and `exec-d35c1568-bdfb-4b2c-a0e5-674507430b9e.png` (reading room) in `/Users/tdufva/.codex/generated_images/01a18791-3c1f-7c73-98d5-70fce562b286/`.
 
-`src/assets/painted-rule.svg` and `painted-frame.svg` use two restrained, uneven native vector strokes. `canvas-grain.svg` provides a static, low-opacity texture. Cover ornament alone receives slight SVG displacement, with a unique filter ID per cover. Text and form controls are not filtered. The Atlas connection curves retain their original data endpoints. No texture or pigment is animated.
+The current interface uses the much bolder art direction in [Bold impressionism](bold-impressionism.md). `src/paint.css` replaces the restrained frame treatment with broad strokes, irregular pigment fields and a painted background throughout the app. Native masks are `brush-swipe.svg` and `paint-patch.svg`; the earlier thin rule/frame assets are removed. Cover ornament alone receives slight SVG displacement, with a unique filter ID per cover. Text is not filtered. The Atlas connection curves retain their original data endpoints. No texture or pigment is animated.
 
 ## Final ImageGen edit prompts
 
