@@ -1,12 +1,12 @@
 const artworks = {
  hero: {
-  file: 'empty-smoky-salon',
-  description: 'Tyhjä, savuinen vanha salonki lämpimässä iltavalossa. Pöydällä on Sinuhe egyptiläinen ja muita vanhoja kirjoja.',
+  file: 'salon-impressionist',
+  description: 'Impressionistinen maalaus tyhjästä, savuisesta salongista lämpimässä iltavalossa. Pöydällä on Sinuhe egyptiläinen ja muita vanhoja kirjoja.',
   number: '01'
  },
  welcome: {
-  file: 'sinuhe-reading-room',
-  description: 'Tyhjä vanhan kirjaston lukusoppi, varjoisia kirjahyllyjä ja pöydällä Mika Waltarin Sinuhe egyptiläinen.',
+  file: 'reading-room-impressionist',
+  description: 'Impressionistinen maalaus vanhan kirjaston tyhjästä lukusopista, varjoisia kirjahyllyjä ja pöydällä Mika Waltarin Sinuhe egyptiläinen.',
   number: '02'
  }
 } as const

@@ -1,4 +1,4 @@
-# Quiet salons and literary still lifes
+# Impressionist salons and literary still lifes
 
 Colour reference: [ColorArchive Jazz Club](https://colorarchive.org/collections/jazz-club/).
 
@@ -10,20 +10,32 @@ Data colours use lighter counterparts of the original avatar colours, while book
 
 The imagery now uses empty, smoky old interiors and literary still lifes, without people, musicians, portraits or overt jazz symbols. Mika Waltari's Sinuhe egyptiläinen is a visual literary reference; the depicted bindings are original generic designs rather than copies of a published cover. No work or fictional rating is added to the archive by this visual change.
 
-Generated with the built-in ImageGen tool. Saved project assets:
+Edited from the original empty-room images with the built-in ImageGen tool, using its style-transfer mode. Final project assets (1120 × 1400 and 640 × 800 WebP):
 
-- `public/images/empty-smoky-salon.webp`
-- `public/images/empty-smoky-salon-small.webp`
-- `public/images/sinuhe-reading-room.webp`
-- `public/images/sinuhe-reading-room-small.webp`
+- `public/images/salon-impressionist.webp`
+- `public/images/salon-impressionist-small.webp`
+- `public/images/reading-room-impressionist.webp`
+- `public/images/reading-room-impressionist-small.webp`
 
-The former illustration containing musicians is removed from the published assets. Original generations remain in the image library; the WebP files are only resized and encoded for the web.
+Earlier photographic WebP assets are removed from the published directory. The original generations remain in the image library; the final WebP files are only resized and encoded for the web. Generated painting sources are `exec-d31ff2f9-3c12-48e7-9e24-ca3c10df1f4c.png` (salon) and `exec-d35c1568-bdfb-4b2c-a0e5-674507430b9e.png` (reading room) in `/Users/tdufva/.codex/generated_images/01a18791-3c1f-7c73-98d5-70fce562b286/`.
 
-## Empty salon prompt
+`src/assets/painted-rule.svg` and `painted-frame.svg` use two restrained, uneven native vector strokes. `canvas-grain.svg` provides a static, low-opacity texture. Cover ornament alone receives slight SVG displacement, with a unique filter ID per cover. Text and form controls are not filtered. The Atlas connection curves retain their original data endpoints. No texture or pigment is animated.
+
+## Final ImageGen edit prompts
+
+Both calls used the following shared prompt verbatim, followed by the corresponding scene-specific suffix below. The input was the matching original published empty-room image, inspected before editing. Transparent background: false.
+
+Use case: style-transfer. Asset type: portrait 4:5 illustration for a dark Finnish literary club app. Edit the provided image, which is the edit target. Apply a restrained but clearly visible late-19th-century impressionist oil-painting treatment: broken, confident small brushstrokes, soft lost-and-found edges, tactile thin paint with occasional impasto highlights, hazy lamplight built from warm copper and muted olive dabs. It must read as a hand-painted oil painting, not a photograph with a filter, yet keep the room and objects recognisable and the composition nearly unchanged. Preserve the rich dark overall value structure, warm walnut, copper, taupe, sage and ivory palette, smoky empty 1920s salon atmosphere. Do not brighten the whole image. Keep the foreground book and its text readable, with original generic binding, text exactly 'SINUHE EGYPTILÄINEN' and 'MIKA WALTARI'. Keep all existing object positions and empty furniture. No people, musicians, faces, human silhouettes, human reflections or portraits; no musical instruments, notes, stars, starbursts, asterisks, neon, logos or watermarks. Do not add new objects or lettering.
+
+Salon suffix: This image is the main empty salon scene. Preserve the sweeping dark table with Finnish books in the foreground, the curved empty chairs, green banquette, glowing table lamps and smoky window light. Soften the distant architecture through brushwork while retaining the foreground book as a quiet literary anchor.
+
+Reading-room suffix: This image is the companion empty library alcove. Preserve the brass reading lamp, bookcases, empty velvet armchair, ceramic vessel, folded map and brown Sinuhe book with its restrained papyrus ornament. Carry the same soft smoky, broken-brushstroke oil-painting treatment into this composition.
+
+## Original source image prompt — empty salon
 
 Use case: photorealistic-natural. Asset type: atmospheric portrait 4:5 image for a Finnish literary archive website. Create a richly detailed, completely EMPTY, smoky late-1920s reading salon in a discreet jazz-club venue after closing. No people anywhere. Quiet old European interior, dark polished walnut panelling, curved wooden chairs around small tables, a worn velvet banquette, tall windows, a softly glowing amber table lamp and delicate residual smoke drifting through a diagonal shaft of tungsten light. The atmosphere is literary, intimate, mysterious and unhurried. In the near foreground, on a small table, an old clothbound Finnish book rests beside a closed notebook and a glass; the book has a plain original typographic binding with the clearly readable title 'SINUHE EGYPTILÄINEN' and author 'MIKA WALTARI', with restrained Egyptian papyrus border details. This is an original generic book binding, not a reproduction of an existing edition's cover. A few other old unlettered books lie nearby. The room itself is the main subject: use strong depth, layered empty spaces, tactile wood grain, faint smoke and quiet lamplight, with the book naturally integrated rather than a product advertisement. A refined archival colour photograph, analog film grain, subtle softness in distant haze, precise material details, understated and believable. Palette: warm shadow #4C4743, deep amber #6E6121, muted taupe #AB9387, sage #A5AB87, ivory #FAFAF9 and copper #BC6438; gentle tonal variations and low light. Avoid obvious jazz illustration, posters or symbolism. No saxophones, trumpets, brass instruments, musical notes, neon signs, vinyl records, stage performance, people, musicians, silhouettes, faces, portraits on walls, human reflections, human statues, stars, asterisks, starburst motifs, logos or watermarks. No additional legible text beyond the book title and author.
 
-## Reading room prompt
+## Original source image prompt — reading room
 
 Use case: photorealistic-natural. Asset type: atmospheric portrait 4:5 companion image for a literary archive website. An entirely EMPTY old European library alcove adjoining a quiet 1920s salon, photographed as a refined, tactile analog-film editorial still life. No people, faces, human figures or statues anywhere. A small dark wooden reading table with an old original generic hardback of 'SINUHE EGYPTILÄINEN' by 'MIKA WALTARI' prominently but naturally resting on it, its dark amber cloth cover decorated only with a fine papyrus-reed border; the exact title and author are legible. Beside it are two other timeworn unlettered literary volumes, a folded map with no legible writing, a small glazed ceramic vessel and a brass shaded reading lamp. In the background: deep shelves full of old books, an unoccupied velvet armchair, a slightly open doorway into a dim, hazy salon. A muted Egyptian literary mood appears only in the papyrus binding ornament, the ceramic vessel and a restrained architectural echo in the wall moulding. Do not turn the scene into an Egyptian temple or a fantasy scene. Thin wisps of smoke and suspended dust catch the warm light. Rich material detail: aged paper edges, cloth, dark walnut, tarnished brass. A still, evocative room where a reader has just stepped away. Restrained analog colour photograph, subtle film grain, intimate natural composition, warm shadows and gentle chiaroscuro. Use the same six-colour palette: #4C4743 #6E6121 #AB9387 #A5AB87 #FAFAF9 #BC6438 with tonal variations. No people or human reflections, no faces on book covers, no depictions of people in artworks, no musician, no instrument, no obvious jazz branding, no neon, no stars or asterisks, no watermark, no modern objects. Do not reproduce any existing book-cover art. No additional readable text beyond the title and author.
 

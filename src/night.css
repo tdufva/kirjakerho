@@ -1,4 +1,4 @@
-/* The whole archive lives in the same after-hours salon as its photographs. */
+/* The whole archive lives in the same after-hours salon as its paintings. */
 :root {
  color-scheme:dark;
  --night:#1C1713;
@@ -249,4 +249,79 @@ dl>div{border-color:var(--divider)}dt{color:var(--text-muted)}dd{color:var(--tex
  :root{--paper:white;--ink:#242321;--muted:#555;--text:#242321;--text-muted:#555;--accent-gold:#6E6121;--panel:white;--surface:white;--surface-deep:white}
  html,body,#root{background:white!important;color:#242321!important}
  .page,.section,.profile-block,.network-chart,.stats-strip,.cover-wrap{background:transparent!important}
+}
+
+/* A quiet impressionist finish. Only pigment, rules and ornament are textured;
+   type, focus rings, form boundaries and the position of data stay precise. */
+:root{
+ --painted-rule:url('./assets/painted-rule.svg');
+ --painted-frame:url('./assets/painted-frame.svg');
+ --canvas-grain:url('./assets/canvas-grain.svg');
+}
+body{
+ background-image:var(--canvas-grain),radial-gradient(ellipse at 88% 0,rgba(188,100,56,.16),transparent 58%),radial-gradient(ellipse at 0 22%,rgba(110,97,33,.12),transparent 55%);
+ background-size:220px 220px,100% 1600px,100% 1600px;
+ background-repeat:repeat,no-repeat,no-repeat;
+}
+.site-header{
+ border-color:transparent;background-image:var(--painted-rule),var(--painted-rule);
+ background-size:100% 8px,100% 7px;background-position:left top,left bottom;
+ background-repeat:no-repeat;background-origin:border-box;
+}
+.site-footer,.timeline-section,.correlation-section,.work-info-columns,.settings-section,.welcome-footer{
+ border-top-color:transparent;background-image:var(--painted-rule);
+ background-size:100% 7px;background-position:left top;background-repeat:no-repeat;
+}
+.category-tabs,.member-tabs,.atlas-tabs,.activity-chart,.detail-score,
+.editorial-list>a,.archive-list>a,.profile-lists section>a,.settings-row,
+.period-list>button,dl>div,.network-work-links a,.annotation-locations>div{
+ border-bottom-color:transparent;background-image:var(--painted-rule);
+ background-size:100% 6px;background-position:left bottom;background-repeat:no-repeat;
+}
+.hero,.hero:before,.jazz-artwork-frame,.literary-vignette,.profile-block,
+.atlas-invitation,.shared-favorites,.install-panel,.theme-tile,.world-map,
+.network-chart,.detail-cover,.cover-wrap,.archive-grid .cover-wrap,.filter-panel,.modal,
+.upload-zone,.scale-panel,.import-complete{
+ border-image-source:var(--painted-frame);border-image-slice:12;
+ border-image-width:8px;border-image-repeat:stretch;
+}
+.hero,.profile-block,.atlas-invitation,.shared-favorites,.install-panel,.theme-tile,.upload-zone{
+ --painted-base:#2C231D;
+ background-color:var(--painted-base);
+ background-image:var(--canvas-grain),radial-gradient(ellipse at 10% 0,rgba(188,100,56,.13),transparent 70%),radial-gradient(ellipse at 100% 100%,rgba(165,171,135,.065),transparent 75%);
+ background-size:220px 220px,100% 100%,100% 100%;
+ background-repeat:repeat,no-repeat,no-repeat;
+ box-shadow:inset 0 0 45px #0F0C0926;
+}
+.hero{--painted-base:#2A211B}
+.atlas-invitation,.shared-favorites{--painted-base:#2B2B21}
+.theme-tile:nth-child(3n+2){--painted-base:#2C3024}
+.theme-tile:nth-child(3n+3){--painted-base:#35271F}
+.theme-tile.active{outline:1px solid var(--accent-gold);outline-offset:-3px}
+.jazz-artwork-frame,.literary-vignette{padding:9px;background-color:#1C1713;box-shadow:0 9px 35px #0003}
+.hero .jazz-artwork-frame,.welcome-art .jazz-artwork-frame{padding:9px}
+.book-cover{border-radius:1px 3px 2px 1px;background-image:var(--canvas-grain);background-size:150px 150px}
+.book-cover:before{border-radius:2px 1px 3px 1px;transform:rotate(-.3deg)}
+.cover-art{stroke-width:1.25;opacity:.66;stroke-linecap:round;stroke-linejoin:round}
+.score-stamp{border-radius:1px 3px 1px 2px;border-width:1px;box-shadow:1px 2px 6px #0005}
+.tiny-rule{height:5px;width:37px;background:var(--accent-copper);clip-path:polygon(0 39%,30% 28%,63% 40%,100% 27%,95% 55%,60% 63%,27% 52%,3% 69%)}
+.desktop-nav a.active:after,.mobile-nav>a.active:before{height:3px;clip-path:polygon(0 25%,32% 0,64% 21%,100% 9%,97% 70%,61% 100%,29% 72%,2% 91%)}
+.text-link{text-decoration-thickness:1px;text-underline-offset:6px}
+.bar,.distribution>div>div,.year-rating-chart>div>div{border-radius:1px 2px 0 0;box-shadow:inset 1px 0 2px #FAFAF91A}
+.network-thread{fill:none;stroke:var(--bronze);stroke-width:1.3;stroke-linecap:round;opacity:.85}
+.land{stroke-linecap:round;stroke-linejoin:round}
+.lucide{stroke-width:1.6}
+.welcome-page{
+ background-image:var(--canvas-grain),radial-gradient(ellipse at 95% 15%,#3C2C20,transparent 65%);
+ background-color:var(--night);background-size:220px 220px,100% 100%;background-repeat:repeat,no-repeat;
+}
+@media(max-width:680px){
+ .mobile-nav{border-top-color:transparent;background-image:var(--painted-rule);background-size:100% 7px;background-position:left top;background-repeat:no-repeat}
+ .hero-art .jazz-artwork-frame,.welcome-art .jazz-artwork-frame{padding:7px}
+ .literary-vignette{padding:5px}
+}
+@media print{
+ body,.welcome-page,.site-header,.site-footer,.timeline-section,.correlation-section,.work-info-columns,.settings-section,.welcome-footer{background-image:none!important}
+ .hero,.profile-block,.atlas-invitation,.shared-favorites,.install-panel,.theme-tile,.upload-zone,.book-cover{background-image:none!important;box-shadow:none}
+ .hero,.hero:before,.jazz-artwork-frame,.literary-vignette,.profile-block,.atlas-invitation,.shared-favorites,.install-panel,.theme-tile,.world-map,.network-chart,.detail-cover,.cover-wrap,.filter-panel,.modal{border-image:none}
 }
