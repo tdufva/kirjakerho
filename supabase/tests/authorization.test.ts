@@ -24,3 +24,13 @@ it('rejects stale revisions without clobbering a newer archive',async()=>{await 
 it('rolls back every change if a rating is outside its original scale',async()=>{await login(owner);const invalid=structuredClone(sample);invalid.works[0].ratings[0].value=100;await expect(save(clubA,1,invalid)).rejects.toThrow(/check constraint/);expect((await db.query('select * from public.works')).rows).toHaveLength(2);expect((await db.query('select * from public.ratings')).rows).toHaveLength(8);expect((await db.query<{revision:number}>('select revision from public.clubs')).rows[0].revision).toBe(1)})
 it('binds invitations to a verified email and consumes them only once',async()=>{await login(owner);const token=(await db.query<{token:string}>("select public.create_invitation($1,'member@example.test','reader') as token",[clubA])).rows[0].token;await login(other);await expect(db.query('select public.accept_invitation($1)',[token])).rejects.toThrow('invalid_invitation');await login(member);await db.query('select public.accept_invitation($1)',[token]);expect((await db.query('select * from public.works')).rows).toHaveLength(2);await expect(db.query('select public.accept_invitation($1)',[token])).rejects.toThrow('invalid_invitation');await expect(save(clubA,1)).rejects.toThrow('admin_required')})
 it('blocks anonymous reads and function execution',async()=>{await login('','anon');await expect(db.query('select * from public.works')).rejects.toThrow(/permission denied/);await expect(db.query("select public.create_club('anonymous')")).rejects.toThrow(/permission denied/)})
+
+it('round-trips reading sessions and standalone comments through existing JSONB storage',async()=>{
+ const {withSessions,readingId}=await import('../../src/domain/readings');await login(owner)
+ const a=structuredClone(sample),w=a.works[0],memberId=a.members[0].id
+ a.works[0]=withSessions(w,[{id:readingId(w.id,'2020'),date:'2020',ratings:[{memberId,value:8,min:1,max:10}],reviews:[{memberId,text:'Ensimmäinen keskustelu'}]},{id:readingId(w.id,'2025'),date:'2025',ratings:[{memberId,value:9,min:1,max:10}],reviews:[{memberId:a.members[1].id,text:'Kommentti ilman arvosanaa'}]}])
+ await save(clubA,1,a)
+ const stored=(await db.query<{data:typeof a.works[0]}>('select data from public.works where id=$1',[w.id])).rows[0].data
+ expect(stored.readingSessions?.map(s=>s.date)).toEqual(['2020','2025']);expect(stored.readingSessions?.[1].reviews[0].text).toBe('Kommentti ilman arvosanaa')
+ expect((await db.query<{value:number}>('select value from public.ratings where work_id=$1',[w.id])).rows.map(r=>Number(r.value))).toEqual([9])
+})

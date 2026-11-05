@@ -4,7 +4,7 @@ import { demoArchive } from '../data/demo'
 import type { Archive, Work } from '../domain/model'
 import { loadCache, saveCache, recovery, saveClubIndex, loadClubIndex, clearUserCache } from './cache'
 import { supabase, listClubs, fetchArchive, saveCloud, type Club } from './cloud'
-interface State {archive:Archive;ready:boolean;busy:boolean;user:User|null;clubs:Club[];club:Club|null;online:boolean;notice:string;setNotice:(s:string)=>void;save:(a:Archive)=>Promise<void>;restore:()=>Promise<void>;selectClub:(c:Club)=>Promise<void>;refreshClubs:()=>Promise<void>;updateWork:(w:Work)=>Promise<void>;signOut:()=>Promise<void>;useLocal:()=>Promise<void>}
+interface State {archive:Archive;ready:boolean;busy:boolean;user:User|null;clubs:Club[];club:Club|null;online:boolean;notice:string;setNotice:(s:string)=>void;save:(a:Archive)=>Promise<void>;restore:(id?:string)=>Promise<void>;selectClub:(c:Club)=>Promise<void>;refreshClubs:()=>Promise<void>;updateWork:(w:Work)=>Promise<void>;signOut:()=>Promise<void>;useLocal:()=>Promise<void>}
 const Context=createContext<State>(null!)
 export const useArchive=()=>useContext(Context)
 export function ArchiveProvider({children}:{children:ReactNode}) {
@@ -38,7 +38,7 @@ export function ArchiveProvider({children}:{children:ReactNode}) {
    if(c){try{await saveCache(a,cacheKey())}catch{setNotice('Arkisto tallennettiin pilveen. Tämän laitteen offline-kopiota ei voitu tallentaa.')}}else await saveCache(a,cacheKey());setArchive(a)
   } finally {setBusy(false)}
  }
- async function restore() {const previous=await recovery(cacheKey());if(!previous)throw new Error('Palautettavaa versiota ei vielä ole.');await save(previous);setNotice('Edellinen paikallisesti tallennettu versio palautettiin.')}
+ async function restore(id?:string) {const previous=await recovery(cacheKey(),id);if(!previous)throw new Error('Palautettavaa versiota ei vielä ole.');await save(previous);setNotice('Edellinen paikallisesti tallennettu versio palautettiin.')}
  async function useLocal() {++cloudEpoch.current;setClub(null);setArchive(await loadCache()??demoArchive());setNotice('Paikallinen arkisto avattu.')}
  async function signOut() {const uid=current.current.user?.id;++cloudEpoch.current;await supabase?.auth.signOut();if(uid)await clearUserCache(uid);setClub(null);setClubs([]);setUser(null);setArchive(await loadCache()??demoArchive())}
  useEffect(()=>{

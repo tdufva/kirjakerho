@@ -1,0 +1,14 @@
+{
+  "description": "Käsin tarkistettu synteettinen Excel. Ei käyttäjän alkuperäinen aineisto.",
+  "works": 4,
+  "readings": 5,
+  "members": ["Aino", "Lukija B", "Matti"],
+  "ratings": 6,
+  "comments": 6,
+  "sinuheDates": ["2020-05-15", "2025-06-10"],
+  "sinuheScores": [[8, 6], [9, 5]],
+  "reviewOnlySource": "Kirjat!F4",
+  "shiftedTitleSource": "Kirjat 2024!B4",
+  "invalidScoreSource": "Kirjat!D7",
+  "missingTitleRow": 8
+}

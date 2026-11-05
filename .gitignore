@@ -9,3 +9,5 @@ coverage/
 supabase/.temp/
 *.tsbuildinfo
 .sites-runtime/
+tmp/
+output/

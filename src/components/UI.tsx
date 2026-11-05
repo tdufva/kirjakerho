@@ -1,3 +1,4 @@
+import { readingHref } from '../domain/readings'
 import { useEffect, useRef, useId, type ReactNode } from 'react'
 import { jazzCoverColors,jazzPalette } from '../data/jazzTheme'
 import { BookOpen,ArrowUpRight, X } from 'lucide-react'
@@ -21,7 +22,7 @@ export function Cover({work,small=false}:{work:Work;small?:boolean}) {
   <div className="cover-foot"><span>ATLAS</span><span className="cover-edition">KOKOELMA</span></div>
  </div>
 }
-export function WorkCard({work,index}:{work:Work;index?:number}) {return <Link to={`/teos/${work.id}`} className={`work-card work-pigment-${work.motif % 6}`}>
+export function WorkCard({work,index}:{work:Work;index?:number}) {return <Link to={readingHref(work)} className={`work-card work-pigment-${work.motif % 6}`}>
  <div className="cover-wrap"><Cover work={work}/><span className="score-stamp"><strong>{format(average(work))}</strong><span>/ 10</span></span>{index!==undefined&&<span className="rank-number">{String(index+1).padStart(2,'0')}</span>}</div>
  <p className="work-creator">{work.creator}</p><h3>{work.title}</h3><p className="work-sub">{work.date?.slice(0,4)??'Ei päiväystä'}<span>·</span>{work.ratings.length} arviota</p>
  </Link>}

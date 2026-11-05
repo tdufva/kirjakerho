@@ -1,47 +1,552 @@
-import { useRef,useState,useMemo } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload,FileSpreadsheet,ArrowRight,Check,CheckCircle2,ChevronDown,AlertCircle,Download } from 'lucide-react'
+import { Upload, FileSpreadsheet, ArrowRight, Check, CheckCircle2, ChevronDown, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { readWorkbook,interpret,mergeArchive,roleLabels,detectSheet,type Workbook,type Role } from '../importer/excel'
+import {
+  readWorkbook,
+  interpret,
+  mergeArchive,
+  roleLabels,
+  detectSheet,
+  type Workbook,
+  type Role,
+  type BlankPolicy
+} from '../importer/excel'
+import { readingViews } from '../domain/readings'
 import { useArchive } from '../services/store'
 import { canManage } from '../services/cloud'
-import { average,format } from '../domain/statistics'
 import { ErrorText } from './UI'
-import type { ImportRecord } from '../domain/model'
+import { ImportAudit } from './ImportAudit'
+import { normalize, type ImportRecord } from '../domain/model'
 export function ImportPage() {
- const {archive,save,busy,club}=useArchive(),fileRef=useRef<HTMLInputElement>(null)
- const [wb,setWb]=useState<Workbook|null>(null),[step,setStep]=useState(1),[loading,setLoading]=useState(false),[error,setError]=useState(''),[editing,setEditing]=useState(false),[min,setMin]=useState(1),[max,setMax]=useState(10),[confirmed,setConfirmed]=useState(false),[scaleConfirmed,setScaleConfirmed]=useState(false),[drag,setDrag]=useState(false),[summary,setSummary]=useState({added:0,updated:0,ratings:0})
- const preview=useMemo(()=>wb?interpret(wb,min,max):null,[wb,min,max])
- const record:ImportRecord={id:crypto.randomUUID(),filename:wb?.filename??'',fingerprint:wb?.fingerprint??'',at:new Date().toISOString(),added:0,updated:0,warnings:preview?.issues??[],mapping:{min,max,sheets:wb?.sheets}}
- const merged=preview?mergeArchive(archive,preview,record):null
- if(club&&!canManage(club.role))return <div className="page narrow"><h1>Arkiston päivittäminen</h1><p>Yhteistä arkistoa voi päivittää kirjakerhon ylläpitäjä.</p><Link className="button button-dark" to="/arkisto">Avaa arkisto</Link></div>
- async function read(file:File|undefined) {
-  if(!file)return
-  setError('');setLoading(true)
-  try {const next=await readWorkbook(file);setWb(next);setStep(2);setConfirmed(false);setScaleConfirmed(false)}catch(e){setError(e instanceof Error?e.message:'Tiedostoa ei voitu avata. Kokeile toista Excel-tiedostoa.')}finally{setLoading(false)}
- }
- function patchColumn(si:number,ci:number,change:Record<string,unknown>) {setWb(old=>old?{...old,sheets:old.sheets.map((s,i)=>i===si?{...s,columns:s.columns.map((c,j)=>j===ci?{...c,...change}:c)}:s)}:null);setConfirmed(false)}
- async function finish(){
-  if(!merged||!preview||!wb)return
-  setError('')
-  try {await save(merged.archive);setSummary({added:merged.added,updated:merged.updated,ratings:preview.works.reduce((s,w)=>s+w.ratings.length,0)});setStep(4)}catch(e){setError(e instanceof Error?e.message:'Tallentaminen ei onnistunut. Tietojasi ei korvattu.')}
- }
- function sample(){const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet([['Kirja','Kirjailija','Päivämäärä','Aino','Matti','Leena','Pekka'],...archive.works.slice(0,8).map(w=>[w.title,w.creator,w.date,...archive.members.slice(0,4).map(m=>w.ratings.find(r=>r.memberId===m.id)?.value??'')])]),'Kirjat');XLSX.writeFile(book,'Atlas-esimerkki.xlsx')}
- return <div className="page import-page"><div className="import-heading"><p className="eyebrow">OMA HISTORIA, UUSI LUKU</p><h1>{step===4?<>Historia on <em>valmis.</em></>:<>Tuo kirjakerhon<br/><em>historia.</em></>}</h1><p>{step===4?'Kaikki yhteiset lukukokemukset yhdessä paikassa.':'Valitse Excel-tiedosto. Tunnistamme teokset, arvioijat ja arvosanat.'}</p></div>
- <ol className="import-steps">{['Valitse tiedosto','Tarkista tiedot','Vahvista tuonti'].map((label,i)=><li className={step>=i+1?'active':''} key={label}><span>{step>i+1?<Check size={16}/>:i+1}</span>{label}</li>)}</ol>
- {step===1&&<><div className={`upload-zone ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);void read(e.dataTransfer.files[0])}}><span className="upload-icon"><FileSpreadsheet size={44} strokeWidth={1.3}/></span><h2>Kaikki alkaa yhdestä tiedostosta.</h2><p>Alkuperäistä Exceliä ei tarvitse muokata.</p><button className="button button-burgundy" onClick={()=>fileRef.current?.click()} disabled={loading}><Upload size={20}/>{loading?'Luetaan tiedostoa…':'Valitse Excel-tiedosto'}</button><input aria-label="Excel-tiedosto" className="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.csv,.ods" ref={fileRef} onChange={e=>void read(e.target.files?.[0])}/><span>tai vedä tiedosto tähän · Excel, CSV, ODS · enintään 20 Mt</span></div><div className="import-info"><div><h3>Oma arkisto pysyy omana.</h3><p>{club?'Tiedot tallennetaan kirjakerhon yhteiseen arkistoon.':'Tiedosto käsitellään tällä laitteella. Tuontia ei lähetetä ulkopuoliseen tekoälypalveluun.'}</p></div><button className="text-link" onClick={sample}><Download size={18}/>Lataa esimerkkitiedosto</button></div></>}
- {step===2&&wb&&preview&&<><div className="detected-banner"><FileSpreadsheet size={26}/><div><strong>{wb.filename}</strong><span>{wb.sheets.length} välilehteä · {preview.rows} tietoriviä</span></div><button className="text-link" onClick={()=>{setStep(1);setWb(null)}}>Vaihda tiedosto</button></div><h2>Tunnistimme nämä tiedot.</h2><p className="muted">Tarkista valinnat ja vahvista alkuperäinen arvosana-asteikko.</p><div className="detected-counts"><div><strong>{preview.works.filter(w=>w.category==='book').length}</strong><span>kirjaa</span></div><div><strong>{preview.works.filter(w=>w.category!=='book').length}</strong><span>kulttuurielämystä</span></div><div><strong>{preview.members.length}</strong><span>arvioijaa</span></div><div><strong>{preview.works.reduce((s,w)=>s+w.ratings.length,0)}</strong><span>arviota</span></div></div>
- <div className="detected-members">{preview.members.map(m=><span key={m.id}><i style={{background:m.color}}/>{m.name}</span>)}</div>
- <div className="scale-panel"><div><h3>Mikä on arvosanojen asteikko?</h3><p>Valitse alkuperäisen asteikon pienin ja suurin mahdollinen arvosana. Eri asteikot vertaillaan välillä 0–10.</p></div><label>Pienin<input type="number" step="any" value={min} onChange={e=>{setMin(+e.target.value);setScaleConfirmed(false)}}/></label><label>Suurin<input type="number" step="any" value={max} onChange={e=>{setMax(+e.target.value);setScaleConfirmed(false)}}/></label><label className="check-label"><input type="checkbox" checked={scaleConfirmed} onChange={e=>setScaleConfirmed(e.target.checked)}/>Asteikko on oikein</label></div>
- <button className="button button-outline mapping-toggle" onClick={()=>setEditing(!editing)} aria-expanded={editing}>{editing?'Sulje tietojen korjaus':'Tarkista ja korjaa sarakkeita'}<ChevronDown size={18}/></button>
- <div className="mapping-sheets">{wb.sheets.map((sheet,si)=><div className="mapping-sheet" key={sheet.name}><label className="check-label"><input type="checkbox" checked={sheet.enabled} onChange={e=>setWb({...wb,sheets:wb.sheets.map((s,i)=>i===si?{...s,enabled:e.target.checked}:s)})}/><strong>{sheet.name}</strong><span>{sheet.rows.length} riviä</span></label>{sheet.enabled&&<><p className="mapping-summary">{sheet.columns.filter(c=>c.role!=='ignore').map(c=>`${c.header} → ${c.role==='memberRating'?`arvosana (${c.member})`:roleLabels[c.role]}`).join(' · ')}</p>{editing&&<><label className="header-row-select">Otsikkorivi<select value={sheet.headerRow} onChange={e=>{const n=+e.target.value,next=detectSheet(sheet.name,sheet.rows,n);setWb({...wb,sheets:wb.sheets.map((s,i)=>i===si?{...s,headerRow:n,columns:next.columns}:s)})}}>{sheet.rows.slice(0,40).map((row,i)=><option value={i} key={i}>{i+1}: {row.slice(0,3).join(' · ').slice(0,80)}</option>)}</select></label><div className="mapping-columns">{sheet.columns.map((c,ci)=><div className="mapping-column" key={c.index}><div><strong>{XLSX.utils.encode_col(c.index)} · {c.header}</strong><small>{sheet.rows.slice(sheet.headerRow+1,sheet.headerRow+4).map(r=>String(r[c.index]??'—')).join(' / ').slice(0,130)}</small></div><label><span className="sr-only">Sarakkeen {c.header} merkitys</span><select value={c.role} onChange={e=>patchColumn(si,ci,{role:e.target.value as Role})}>{Object.entries(roleLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>{['memberRating','memberReview'].includes(c.role)&&<label>Arvioijan nimi<input value={c.member??''} onChange={e=>patchColumn(si,ci,{member:e.target.value})}/></label>}<span className={`confidence ${c.confidence<.8?'uncertain':''}`}>{c.confidence>=.8?'Tunnistettu':'Tarkista'}</span></div>)}</div></>}</>}</div>)}</div>
- <div className="import-actions"><button className="button button-burgundy" disabled={!scaleConfirmed||max<=min||!preview.works.length||wb.sheets.some(s=>s.enabled&&!s.columns.some(c=>c.role==='title'))} onClick={()=>setStep(3)}>Kaikki oikein<ArrowRight size={20}/></button><span>Seuraavaksi näet yhteenvedon ennen tallentamista.</span></div></>}
- {step===3&&preview&&merged&&<><div className="import-summary"><h2>Uusi luku arkistoon.</h2><p>{archive.mode==='demo'?'Esimerkkitiedot vaihtuvat omaan arkistoosi.':`${merged.added} uutta teosta lisätään ja ${merged.updated} olemassa olevan tiedot yhdistetään.`}</p><p>Puuttuva arvosana säilyy puuttuvana. Aiemmin täydennetyt tiedot ja tunnisteet säilyvät.</p><div className="preview-list">{preview.works.slice(0,8).map(w=><div key={w.id}><span><strong>{w.title}</strong><small>{w.creator||'Tekijää ei ilmoitettu'}</small></span><span>{w.ratings.length} arviota</span><strong>{format(average(w))}</strong></div>)}</div>{preview.works.length>8&&<p className="small-note">Lisäksi {preview.works.length-8} muuta teosta.</p>}</div>
- {archive.imports.some(i=>i.fingerprint===wb?.fingerprint)&&<p className="info-box">Tämä sama tiedosto on tuotu aiemmin. Teokset yhdistetään tunnisteiden perusteella.</p>}
- {(preview.issues.length>0||merged.conflicts.length>0)&&<div className="import-warnings"><h3><AlertCircle size={21}/>Tarkista vielä nämä huomiot</h3><p>{preview.skipped} riviä jää teosluettelon ulkopuolelle. Alkuperäiset rivit ja sarakkeet säilyvät tuontihistoriassa.</p><details open><summary>{preview.issues.length} huomiota, {merged.conflicts.length} muuttunutta arviota tai päiväystä</summary><ul>{[...preview.issues,...merged.conflicts].map((issue,i)=><li key={i}>{issue}</li>)}</ul></details><label className="check-label"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Olen tarkistanut huomiot ja hyväksyn muutokset.</label></div>}
- <div className="import-actions"><button className="button button-outline" onClick={()=>setStep(2)}>Takaisin tarkistukseen</button><button className="button button-burgundy" onClick={()=>void finish()} disabled={busy||((preview.issues.length>0||merged.conflicts.length>0)&&!confirmed)}>{busy?'Tallennetaan…':'Tallenna arkistoon'}<Check size={20}/></button></div></>}
- {step===4&&<div className="import-complete"><CheckCircle2 size={62} strokeWidth={1.3}/><h2>Kirjakerhon historia on valmis!</h2><p>{summary.added} uutta teosta · {summary.updated} päivitettyä teosta · {summary.ratings} arviota</p><p>{club?'Yhteinen arkisto on tallennettu pilveen.':'Arkistosi on tallennettu tämän selaimen muistiin.'}</p><Link className="button button-burgundy" to="/arkisto">Tutki arkistoa<ArrowUpRightIcon/></Link><Link className="text-link" to="/asetukset">Lisää Atlas kotinäytölle</Link></div>}
- <ErrorText message={error}/>
- </div>
+  const { archive, save, busy, club } = useArchive(),
+    fileRef = useRef<HTMLInputElement>(null),
+    request = useRef(0)
+  const [wb, setWb] = useState<Workbook | null>(null),
+    [step, setStep] = useState(1),
+    [loading, setLoading] = useState(false),
+    [error, setError] = useState(''),
+    [editing, setEditing] = useState(false),
+    [min, setMin] = useState(1),
+    [max, setMax] = useState(10),
+    [confirmed, setConfirmed] = useState(false),
+    [scaleConfirmed, setScaleConfirmed] = useState(false),
+    [drag, setDrag] = useState(false),
+    [blankPolicy, setBlankPolicy] = useState<BlankPolicy>('keep'),
+    [summary, setSummary] = useState({ added: 0, updated: 0, newReadings: 0 })
+  const preview = useMemo(() => (wb ? interpret(wb, min, max, archive) : null), [wb, min, max, archive])
+  const stamp = useMemo(() => ({ id: crypto.randomUUID(), at: new Date().toISOString() }), [wb?.fingerprint])
+  const record: ImportRecord = {
+    ...stamp,
+    filename: wb?.filename ?? '',
+    fingerprint: wb?.fingerprint ?? '',
+    added: 0,
+    updated: 0,
+    warnings: preview?.issues ?? [],
+    mapping: { min, max, blankPolicy, sheets: wb?.sheets }
+  }
+  const merged = preview ? mergeArchive(archive, preview, record, blankPolicy) : null
+  useEffect(() => setConfirmed(false), [wb, min, max, blankPolicy, archive])
+  if (club && !canManage(club.role))
+    return (
+      <div className="page narrow">
+        <h1>Arkiston päivittäminen</h1>
+        <p>Yhteistä arkistoa voi päivittää kirjakerhon ylläpitäjä.</p>
+        <Link className="button button-dark" to="/arkisto">
+          Avaa arkisto
+        </Link>
+      </div>
+    )
+  async function read(file: File | undefined) {
+    if (!file) return
+    const id = ++request.current
+    setError('')
+    setLoading(true)
+    try {
+      const next = await readWorkbook(file)
+      if (id !== request.current) return
+      setWb({
+        ...next,
+        sheets: next.sheets.map((s) => ({
+          ...s,
+          columns: s.columns.map((c) =>
+            c.role === 'ignore' && archive.members.some((m) => normalize(m.name) === normalize(c.header))
+              ? {
+                  ...c,
+                  role: 'memberRating',
+                  member: archive.members.find((m) => normalize(m.name) === normalize(c.header))!.name,
+                  confidence: 0.9
+                }
+              : c
+          )
+        }))
+      })
+      setStep(2)
+      setScaleConfirmed(false)
+    } catch (e) {
+      if (id === request.current) setError(e instanceof Error ? e.message : 'Tiedostoa ei voitu avata.')
+    } finally {
+      if (id === request.current) setLoading(false)
+    }
+  }
+  function patchSheet(si: number, change: Record<string, unknown>) {
+    setWb((old) =>
+      old ? { ...old, sheets: old.sheets.map((s, i) => (i === si ? { ...s, ...change } : s)) } : null
+    )
+  }
+  function editCell(name: string, row: number, column: number, value: string) {
+    setWb((old) =>
+      old
+        ? {
+            ...old,
+            sheets: old.sheets.map((s) =>
+              s.name === name
+                ? {
+                    ...s,
+                    originalRows: s.originalRows ?? s.rows.map((r) => [...r]),
+                    rows: s.rows.map((r, i) => (i === row ? Object.assign([...r], { [column]: value }) : r)),
+                    cellWarnings: { ...s.cellWarnings, [XLSX.utils.encode_cell({ r: row, c: column })]: '' }
+                  }
+                : s
+            )
+          }
+        : null
+    )
+  }
+  async function finish() {
+    if (!preview || !wb || !confirmed) return
+    setError('')
+    try {
+      const result = mergeArchive(
+        archive,
+        preview,
+        { ...record, id: crypto.randomUUID(), at: new Date().toISOString() },
+        blankPolicy
+      )
+      await save(result.archive)
+      setSummary(result)
+      setStep(4)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Tallentaminen ei onnistunut.')
+    }
+  }
+  function sample() {
+    const book = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(
+      book,
+      XLSX.utils.aoa_to_sheet([
+        [
+          'Kirja',
+          'Kirjailija',
+          'Päivämäärä',
+          ...archive.members.flatMap((m) => [m.name, `${m.name} kommentti`])
+        ],
+        ...readingViews(archive.works)
+          .slice(0, 8)
+          .map((w) => [
+            w.title,
+            w.creator,
+            w.date,
+            ...archive.members.flatMap((m) => [
+              w.ratings.find((r) => r.memberId === m.id)?.value ?? '',
+              w.reviews
+                ?.filter((r) => r.memberId === m.id)
+                .map((r) => r.text)
+                .join('\n') ??
+                w.ratings.find((r) => r.memberId === m.id)?.review ??
+                ''
+            ])
+          ])
+      ]),
+      'Kirjat'
+    )
+    XLSX.writeFile(book, 'Atlas-esimerkki.xlsx')
+  }
+  return (
+    <div className="page import-page">
+      <div className="import-heading">
+        <p className="eyebrow">OMA HISTORIA, UUSI LUKU</p>
+        <h1>
+          {step === 4 ? (
+            <>
+              Historia on <em>valmis.</em>
+            </>
+          ) : (
+            <>
+              Tuo kirjakerhon
+              <br />
+              <em>historia.</em>
+            </>
+          )}
+        </h1>
+        <p>Tarkista lähde, tulkinta ja muutokset ennen tallentamista.</p>
+      </div>
+      <ol className="import-steps">
+        {['Valitse tiedosto', 'Tarkista tiedot', 'Vahvista tuonti'].map((label, i) => (
+          <li className={step >= i + 1 ? 'active' : ''} key={label}>
+            <span>{step > i + 1 ? <Check size={16} /> : i + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+      {step === 1 && (
+        <>
+          <div
+            className={`upload-zone ${drag ? 'dragging' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDrag(true)
+            }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setDrag(false)
+              void read(e.dataTransfer.files[0])
+            }}
+          >
+            <FileSpreadsheet size={44} />
+            <h2>Kaikki alkaa yhdestä tiedostosta.</h2>
+            <p>Alkuperäistä Exceliä ei tarvitse muokata.</p>
+            <button
+              className="button button-burgundy"
+              onClick={() => fileRef.current?.click()}
+              disabled={loading}
+            >
+              <Upload size={20} />
+              {loading ? 'Luetaan…' : 'Valitse Excel-tiedosto'}
+            </button>
+            <input
+              aria-label="Excel-tiedosto"
+              className="sr-only"
+              type="file"
+              accept=".xlsx,.xls,.xlsm,.csv,.ods"
+              ref={fileRef}
+              onChange={(e) => void read(e.target.files?.[0])}
+            />
+            <p>Excel, CSV, ODS · enintään 20 Mt</p>
+          </div>
+          <div className="import-info">
+            <p>
+              Tiedosto käsitellään tällä laitteella.{' '}
+              {club
+                ? 'Vahvistettu tuonti tallennetaan yhteiseen arkistoon.'
+                : 'Vahvistettu tuonti tallennetaan tämän selaimen muistiin.'}
+            </p>
+            <button className="text-link" onClick={sample}>
+              <Download size={18} />
+              Lataa esimerkkitiedosto
+            </button>
+          </div>
+        </>
+      )}
+      {step === 2 && wb && preview && (
+        <>
+          <div className="detected-banner">
+            <FileSpreadsheet />
+            <div>
+              <strong>{wb.filename}</strong>
+              <span>
+                {wb.sheets.length} välilehteä · {preview.rows} tietoriviä
+              </span>
+            </div>
+            <button
+              className="text-link"
+              onClick={() => {
+                setStep(1)
+                setWb(null)
+              }}
+            >
+              Vaihda tiedosto
+            </button>
+          </div>
+          <div className="detected-counts">
+            <div>
+              <strong>{preview.works.length}</strong>
+              <span>teosta</span>
+            </div>
+            <div>
+              <strong>{readingViews(preview.works).length}</strong>
+              <span>lukukertaa</span>
+            </div>
+            <div>
+              <strong>{preview.members.length}</strong>
+              <span>arvioijaa</span>
+            </div>
+            <div>
+              <strong>{readingViews(preview.works).reduce((s, w) => s + w.ratings.length, 0)}</strong>
+              <span>arvosanaa</span>
+            </div>
+          </div>
+          <div className="scale-panel">
+            <div>
+              <h3>Alkuperäinen arvosana-asteikko</h3>
+              <p>Eri asteikot vertaillaan välillä 0–10. Kommentit tuodaan myös ilman arvosanaa.</p>
+            </div>
+            <label>
+              Pienin
+              <input
+                type="number"
+                step="any"
+                value={min}
+                onChange={(e) => {
+                  setMin(+e.target.value)
+                  setScaleConfirmed(false)
+                }}
+              />
+            </label>
+            <label>
+              Suurin
+              <input
+                type="number"
+                step="any"
+                value={max}
+                onChange={(e) => {
+                  setMax(+e.target.value)
+                  setScaleConfirmed(false)
+                }}
+              />
+            </label>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={scaleConfirmed}
+                onChange={(e) => setScaleConfirmed(e.target.checked)}
+              />
+              Asteikko on oikein
+            </label>
+          </div>
+          <button
+            className="button button-outline mapping-toggle"
+            onClick={() => setEditing(!editing)}
+            aria-expanded={editing}
+          >
+            Tarkista ja korjaa sarakkeita
+            <ChevronDown size={18} />
+          </button>
+          <div className="mapping-sheets">
+            {wb.sheets.map((sheet, si) => (
+              <div className="mapping-sheet" key={sheet.name}>
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={sheet.enabled}
+                    onChange={(e) => patchSheet(si, { enabled: e.target.checked })}
+                  />
+                  <strong>{sheet.name}</strong>
+                  <span>{sheet.rows.length} riviä</span>
+                </label>
+                {sheet.enabled && (
+                  <>
+                    <p className="mapping-summary">
+                      {sheet.columns
+                        .map((c) => `${c.header} → ${roleLabels[c.role]}${c.member ? ` (${c.member})` : ''}`)
+                        .join(' · ')}
+                    </p>
+                    {editing && (
+                      <>
+                        <label>
+                          Otsikkorivi
+                          <select
+                            value={sheet.headerRow}
+                            onChange={(e) => {
+                              const next = detectSheet(sheet.name, sheet.rows, +e.target.value)
+                              patchSheet(si, { headerRow: next.headerRow, columns: next.columns })
+                            }}
+                          >
+                            {sheet.rows.slice(0, 40).map((row, i) => (
+                              <option value={i} key={i}>
+                                {i + 1}: {row.slice(0, 3).join(' · ').slice(0, 80)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <div className="mapping-columns">
+                          {sheet.columns.map((c, ci) => (
+                            <div className="mapping-column" key={c.index}>
+                              <strong>
+                                {XLSX.utils.encode_col(c.index)} · {c.header}
+                              </strong>
+                              <label>
+                                <span className="sr-only">Sarakkeen {c.header} merkitys</span>
+                                <select
+                                  value={c.role}
+                                  onChange={(e) =>
+                                    patchSheet(si, {
+                                      columns: sheet.columns.map((x, i) =>
+                                        i === ci ? { ...x, role: e.target.value as Role } : x
+                                      )
+                                    })
+                                  }
+                                >
+                                  {Object.entries(roleLabels).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                      {label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              {c.role.startsWith('member') && (
+                                <label>
+                                  Arvioijan nimi
+                                  <input
+                                    value={c.member ?? ''}
+                                    onChange={(e) =>
+                                      patchSheet(si, {
+                                        columns: sheet.columns.map((x, i) =>
+                                          i === ci ? { ...x, member: e.target.value } : x
+                                        )
+                                      })
+                                    }
+                                  />
+                                </label>
+                              )}
+                              <span className="confidence uncertain">
+                                {c.confidence < 0.8 ? 'Tarkista tulkinta' : 'Tunnistettu'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          <ImportAudit wb={wb} preview={preview} onEdit={editCell} />
+          <div className="import-actions">
+            <button
+              className="button button-burgundy"
+              disabled={
+                !scaleConfirmed ||
+                max <= min ||
+                !preview.works.length ||
+                wb.sheets.some((s) => s.enabled && !s.columns.some((c) => c.role === 'title'))
+              }
+              onClick={() => setStep(3)}
+            >
+              Vertaa muutoksia
+              <ArrowRight size={20} />
+            </button>
+          </div>
+        </>
+      )}
+      {step === 3 && preview && merged && (
+        <>
+          <section className="import-summary">
+            <h2>Ennen kuin tallennat.</h2>
+            <p>
+              {archive.mode === 'demo' ? 'Esimerkkiarkisto vaihtuu omaan arkistoosi. ' : ''}
+              {merged.added} uutta teosta · {merged.newReadings} uutta lukukertaa · {merged.updated}{' '}
+              päivittyvää teosta.
+            </p>
+            <label>
+              Tyhjä arvosanasolu uudelleentuonnissa
+              <select value={blankPolicy} onChange={(e) => setBlankPolicy(e.target.value as BlankPolicy)}>
+                <option value="keep">Säilytä aiempi arvosana</option>
+                <option value="delete">Poista aiempi arvosana</option>
+              </select>
+            </label>
+            <p className="small-note">
+              Valinta koskee vain mukana olevien arvosanasarakkeiden tyhjiä soluja ja samaa lukukertaa.
+              Puuttuva sarake, virheellinen arvo tai tyhjä kommentti ei poista aiempaa tietoa. Kommentit
+              säilyvät.
+            </p>
+            <div className="audit-scroll" tabIndex={0}>
+              <table className="audit-table">
+                <thead>
+                  <tr>
+                    <th>Teos ja lukukerta</th>
+                    <th>Muutos</th>
+                    <th>Ennen</th>
+                    <th>Jälkeen</th>
+                    <th>Lähde</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {merged.changes.map((c, i) => (
+                    <tr key={i}>
+                      <th scope="row">
+                        {c.title}
+                        <small>
+                          {c.kind === 'work' ? 'Teos' : (c.date ?? 'Ei päiväystä')}
+                          {c.member ? ` · ${c.member}` : ''}
+                        </small>
+                      </th>
+                      <td>
+                        {
+                          {
+                            work: 'Uusi teos',
+                            reading: 'Uusi lukukerta',
+                            rating: 'Arvosana',
+                            review: 'Kommentti',
+                            notes: 'Muistiinpano'
+                          }[c.kind]
+                        }
+                      </td>
+                      <td className="preserve-text">{c.before || '—'}</td>
+                      <td className="preserve-text">{c.after}</td>
+                      <td>{c.source ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!merged.changes.length && (
+              <p>Ei muutoksia teoksiin tai arvioihin. Tuonti kirjataan historiaan.</p>
+            )}
+          </section>
+          {preview.issues.length > 0 && (
+            <div className="import-warnings">
+              <h3>{preview.issues.length} tarkistettavaa huomiota</h3>
+              <p>
+                {preview.skipped} riviä jää teosluettelon ulkopuolelle. Kaikki lähderivit säilyvät
+                tuontihistoriassa.
+              </p>
+              <ul>
+                {preview.issues.map((issue, i) => (
+                  <li key={i}>{issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <label className="check-label">
+            <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+            Olen tarkistanut sarakkeet, solut ja yllä näkyvät muutokset. Hyväksyn tuonnin.
+          </label>
+          <div className="import-actions">
+            <button className="button button-outline" onClick={() => setStep(2)}>
+              Takaisin tarkistukseen
+            </button>
+            <button
+              className="button button-burgundy"
+              onClick={() => void finish()}
+              disabled={busy || !confirmed}
+            >
+              {busy ? 'Tallennetaan…' : 'Tallenna arkistoon'}
+              <Check size={20} />
+            </button>
+          </div>
+        </>
+      )}
+      {step === 4 && (
+        <div className="import-complete">
+          <CheckCircle2 size={62} />
+          <h2>Historia on tallessa.</h2>
+          <p>
+            {summary.added} uutta teosta · {summary.newReadings} uutta lukukertaa · {summary.updated}{' '}
+            päivitettyä teosta
+          </p>
+          <Link className="button button-burgundy" to="/arkisto">
+            Tutki arkistoa
+            <ArrowRight />
+          </Link>
+          <Link className="text-link" to="/vuosikirja">
+            Tee kirjakerhon vuosikirja
+          </Link>
+        </div>
+      )}
+      <ErrorText message={error} />
+    </div>
+  )
 }
-function ArrowUpRightIcon(){return <ArrowRight size={20}/>}

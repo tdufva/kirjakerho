@@ -1,3 +1,4 @@
+import { readingViews } from './readings'
 import type { Rating, Work } from './model'
 export const mean = (values: number[]): number | null => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null
 export const score = (r: Rating): number => (r.value - r.min) / (r.max - r.min) * 10
@@ -15,11 +16,12 @@ export function correlation(pairs: [number, number][]): { r: number | null; n: n
   return { r: vx === 0 || vy === 0 ? null : Math.max(-1, Math.min(1, covariance / Math.sqrt(vx * vy))), n, difference }
 }
 export function sharedPairs(works: Work[], a: string, b: string): [number, number][] {
-  return works.flatMap(w => { const x = w.ratings.find(r => r.memberId === a), y = w.ratings.find(r => r.memberId === b); return x && y ? [[score(x), score(y)] as [number, number]] : [] })
+  return readingViews(works).flatMap(w => { const x = w.ratings.find(r => r.memberId === a), y = w.ratings.find(r => r.memberId === b); return x && y ? [[score(x), score(y)] as [number, number]] : [] })
 }
 export const format = (n: number | null | undefined, digits = 1): string => n == null ? '–' : n.toLocaleString('fi-FI', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 export const yearOf = (w: Work): string => w.date?.slice(0, 4) ?? 'Ei päiväystä'
-export function annual(works: Work[]) {
+export function annual(input: Work[]) {
+  const works=readingViews(input)
   return [...new Set(works.map(yearOf))].filter(y => /^\d{4}$/.test(y)).sort().map(year => {
     const group = works.filter(w => yearOf(w) === year)
     return { year, count: group.length, books: group.filter(w => w.category === 'book').length, average: mean(group.flatMap(w => w.ratings.map(score))) }

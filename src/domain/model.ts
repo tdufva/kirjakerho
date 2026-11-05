@@ -4,6 +4,7 @@ export interface Rating { memberId: string; value: number; min: number; max: num
 export interface Location { name: string; country: string; lat: number; lon: number; kind: 'setting' | 'author' | 'publication' }
 export interface Metadata { source: 'Finna' | 'Open Library' | 'Google Books'; retrievedAt: string; confidence: number; externalId: string; description?: string; cover?: string; publicationYear?: number; subjects?: string[]; url: string }
 export interface Work {
+  readingSessions?: import('./readings').ReadingSession[];
   id: string; title: string; creator: string; category: Category; date?: string; publicationYear?: number;
   description?: string; themes: string[]; locations: Location[]; period?: string; ratings: Rating[];
   color: string; motif: number; reviews?: {memberId:string;text:string;source?:string}[]; metadata?: Metadata; source?: string; notes?: string; annotationSource?:string
