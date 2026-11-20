@@ -46,15 +46,13 @@ export function YearbookPage() {
   }
   return (
     <div className="page yearbook-page">
-      <p className="eyebrow">YHTEISEN VUODEN MUOTOKUVA</p>
       <h1>
         Tarinoita,
         <br />
         <em>jotka jäivät.</em>
       </h1>
       <p className="yearbook-lead">
-        Vuoden kirjat, lukijoiden omat sanat, yhteiset suosikit ja ihanat erimielisyydet. Maalauksellinen
-        vuosikirja talteen ja jaettavaksi.
+        Vuoden kirjat, lukijoiden omat sanat, yhteiset suosikit ja ihanat erimielisyydet.
       </p>
       {!years.length ? (
         <p>
@@ -74,7 +72,6 @@ export function YearbookPage() {
               <p>
                 {data.workCount} teosta · {data.readings.length} lukukertaa
               </p>
-              {archive.mode === 'demo' && <small>ESIMERKKIARKISTO</small>}
             </section>
             <section className="yearbook-options">
               <h2>Sinun kirjakerhosi vuosi.</h2>
