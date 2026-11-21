@@ -1,3 +1,5 @@
+import { useEnrichment } from '../services/useEnrichment'
+import { EnrichmentStatus } from './EnrichmentStatus'
 import { useRef, useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Upload, FileSpreadsheet, ArrowRight, Check, CheckCircle2, ChevronDown, Download } from 'lucide-react'
@@ -22,6 +24,8 @@ export function ImportPage() {
   const { archive, save, busy, club } = useArchive(),
     fileRef = useRef<HTMLInputElement>(null),
     request = useRef(0)
+  const enrichment = useEnrichment()
+  const [lookup, setLookup] = useState(true)
   const [wb, setWb] = useState<Workbook | null>(null),
     [step, setStep] = useState(1),
     [loading, setLoading] = useState(false),
@@ -126,6 +130,10 @@ export function ImportPage() {
       await save(result.archive)
       setSummary(result)
       setStep(4)
+      if (lookup) {
+        const incomingKeys = new Set(preview.works.map((w) => normalize(w.title)))
+        void enrichment.run(result.archive.works.filter((w) => incomingKeys.has(normalize(w.title))))
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Tallentaminen ei onnistunut.')
     }
@@ -213,17 +221,17 @@ export function ImportPage() {
               disabled={loading}
             >
               <Upload size={20} />
-              {loading ? 'Luetaan…' : 'Valitse Excel-tiedosto'}
+              {loading ? 'Luetaan…' : 'Valitse Numbers- tai Excel-tiedosto'}
             </button>
             <input
-              aria-label="Excel-tiedosto"
+              aria-label="Numbers- tai Excel-tiedosto"
               className="sr-only"
               type="file"
-              accept=".xlsx,.xls,.xlsm,.csv,.ods"
+              accept=".numbers,.xlsx,.xls,.xlsm,.csv,.ods"
               ref={fileRef}
               onChange={(e) => void read(e.target.files?.[0])}
             />
-            <p>Excel, CSV, ODS · enintään 20 Mt</p>
+            <p>Numbers, Excel, CSV, ODS · enintään 20 Mt</p>
           </div>
           <div className="import-info">
             <p>
@@ -434,12 +442,26 @@ export function ImportPage() {
       {step === 3 && preview && merged && (
         <>
           <section className="import-summary">
+            <label className="check-label">
+              <input type="checkbox" checked={lookup} onChange={(e) => setLookup(e.target.checked)} />
+              Hae kirjojen maat ja teemat Finnasta tallennuksen jälkeen
+            </label>
+            <p className="small-note">
+              Haku lähettää Finnaan kirjojen nimet ja tekijät. Löydetyt maat ja asiasanat tallennetaan
+              lähdelinkkeineen. Arvosanat ja kommentit käsitellään arkistossa.
+            </p>
             <h2>Ennen kuin tallennat.</h2>
             <p>
               {archive.mode === 'demo' ? 'Esimerkkiarkisto vaihtuu omaan arkistoosi. ' : ''}
               {merged.added} uutta teosta · {merged.newReadings} uutta lukukertaa · {merged.updated}{' '}
               päivittyvää teosta.
             </p>
+            {merged.removed > 0 && (
+              <p>
+                {merged.removed} aiemmin teoksiksi tulkittua yhteenvetoriviä poistetaan teosluettelosta. Näet
+                poistot alla.
+              </p>
+            )}
             <label>
               Tyhjä arvosanasolu uudelleentuonnissa
               <select value={blankPolicy} onChange={(e) => setBlankPolicy(e.target.value as BlankPolicy)}>
@@ -480,7 +502,8 @@ export function ImportPage() {
                             reading: 'Uusi lukukerta',
                             rating: 'Arvosana',
                             review: 'Kommentti',
-                            notes: 'Muistiinpano'
+                            notes: 'Muistiinpano',
+                            details: 'Tekijätiedot'
                           }[c.kind]
                         }
                       </td>
@@ -531,6 +554,7 @@ export function ImportPage() {
       )}
       {step === 4 && (
         <div className="import-complete">
+          <EnrichmentStatus state={enrichment} />
           <CheckCircle2 size={62} />
           <h2>Historia on tallessa.</h2>
           <p>

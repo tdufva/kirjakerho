@@ -1,6 +1,8 @@
+import type { Catalogue } from '../domain/catalogue'
+import { findFinna } from './finna'
 import type { Metadata, Work } from '../domain/model'
 import { normalize } from '../domain/model'
-export interface MetadataCandidate {title:string;creator:string;metadata:Metadata}
+export interface MetadataCandidate {title:string;creator:string;metadata:Metadata;catalogue?:Catalogue}
 const similarity=(a:string,b:string):number=>{
  const aa=new Set(normalize(a).split(' ')),bb=new Set(normalize(b).split(' '))
  return [...aa].filter(x=>bb.has(x)).length/Math.max(aa.size,bb.size,1)
@@ -11,15 +13,7 @@ export async function findMetadata(work:Work,source:'Finna'|'Open Library'|'Goog
  try {
   const options={signal:controller.signal}
   const retrievedAt=new Date().toISOString()
-  if(source==='Finna') {
-   const q=new URLSearchParams({lookfor:`${work.title} ${work.creator}`,type:'AllFields',limit:'5','field[]':'title'})
-   for(const field of ['id','nonPresenterAuthors','year','summary','images','subjects'])q.append('field[]',field)
-   const res=await fetch(`https://api.finna.fi/v1/search?${q}`,options);if(!res.ok) throw new Error('Finna ei vastannut.')
-   const json=await res.json()
-   return (json.records??[]).map((r:any)=>{const title=r.title??'',creator=Array.isArray(r.nonPresenterAuthors)?r.nonPresenterAuthors.map((a:any)=>a.name).filter(Boolean).join(', '):Object.keys(r.authors?.primary??{}).join(', ')
-    return {title,creator,metadata:{source,retrievedAt,confidence:confidence(work,title,creator),externalId:r.id,description:r.summary?.join?.(' '),cover:r.images?.[0]?new URL(r.images[0],'https://api.finna.fi').href:undefined,publicationYear:Number(r.year)||undefined,subjects:r.subjects?.flat(),url:`https://www.finna.fi/Record/${encodeURIComponent(r.id)}`}}
-   })
-  }
+  if(source==='Finna') return (await findFinna(work)).slice(0,5)
   if(source==='Open Library') {
    const q=new URLSearchParams({title:work.title,author:work.creator,limit:'5'})
    const res=await fetch(`https://openlibrary.org/search.json?${q}`,options);if(!res.ok) throw new Error('Open Library ei vastannut.')

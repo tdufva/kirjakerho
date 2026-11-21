@@ -79,7 +79,7 @@ export interface Preview {
 }
 export type BlankPolicy = 'keep' | 'delete'
 export interface ImportChange {
-  kind: 'work' | 'reading' | 'rating' | 'review' | 'notes'
+  kind: 'work' | 'reading' | 'rating' | 'review' | 'notes' | 'details'
   title: string
   date?: string
   member?: string
@@ -104,7 +104,7 @@ export const roleLabels: Record<Role, string> = {
 }
 const patterns: [Role, RegExp][] = [
   ['title', /^(kirja|kirjan nimi|teos|teoksen nimi|nimi|title|book|bok|titel|esitys|näyttely)$/],
-  ['creator', /^(kirjailija|tekijä|author|writer|författare|upphov|taiteilija|ohjaaja)$/],
+  ['creator', /^(kirjailija(?: tapahtuma)?|tekijä|author|writer|författare|upphov|taiteilija|ohjaaja)$/],
   ['publicationYear', /^(julkaisuvuosi|ilmestymisvuosi|publication year|published|utgivningsår)$/],
   ['date', /^(päivämäärä|pvm|päivä|luettu|vuosi|year|date|datum|läst|luku.*päivä|keskustelu.*)$/],
   ['category', /^(laji|kulttuurilaji|kategoria|category|type|typ|luokka)$/],
@@ -166,14 +166,15 @@ export function detectSheet(name: string, rows: Cell[][], forcedHeader?: number)
       .map((r) => r[index] ?? null)
       .filter((v) => str(v) && !patterns.some(([, p]) => p.test(normalize(str(v)))))
     const nums = values.map(numeric).filter((n): n is number => n !== null)
-    const excludes = /keskiarvo|average|medel|yhteensä|summa|sivu|pages|antal|numero|isbn|id|vuosi|year/.test(
-      h
-    )
+    const excludes =
+      /keskiarvo|average|medel|yhteensä|summa|^yht$|^total$|kokous|sivu|pages|antal|numero|isbn|id|vuosi|year/.test(
+        h
+      )
     if (
       !excludes &&
       nums.length &&
       nums.length / values.length >= 0.6 &&
-      nums.every((n) => n >= 0 && n <= 100)
+      nums.filter((n) => n >= 0 && n <= 100).length / nums.length >= 0.8
     ) {
       return {
         index,
@@ -203,7 +204,16 @@ export async function readWorkbook(file: File): Promise<Workbook> {
   const fingerprint = Array.from(new Uint8Array(digest))
     .map((x) => x.toString(16).padStart(2, '0'))
     .join('')
-  const wb = XLSX.read(bytes, { type: 'array', cellDates: true })
+  let wb: XLSX.WorkBook
+  try {
+    wb = XLSX.read(bytes, { type: 'array', cellDates: true })
+  } catch {
+    throw new Error(
+      file.name.toLowerCase().endsWith('.numbers')
+        ? 'Numbers-tiedostoa ei voitu avata. Poista mahdollinen salasana tai vie tiedosto Numbersissa Excel-muotoon.'
+        : 'Tiedostoa ei voitu avata. Valitse ehjä Numbers-, Excel-, CSV- tai ODS-tiedosto.'
+    )
+  }
   let totalCells = 0
   const sheets = wb.SheetNames.map((name) => {
     const ws = wb.Sheets[name]
@@ -225,9 +235,15 @@ export async function readWorkbook(file: File): Promise<Workbook> {
       throw new Error(
         'Taulukon alue on liian suuri kerralla tarkistettavaksi. Jaa tiedosto pienempiin osiin ja yritä uudelleen.'
       )
-    const readRows = () => XLSX.utils.sheet_to_json<Cell[]>(ws, {
-      header: 1, defval: null, raw: true, blankrows: true, range: { s: { r: 0, c: 0 }, e: end }
-    })
+    const readRows = () =>
+      XLSX.utils.sheet_to_json<Cell[]>(ws, {
+        header: 1,
+        defval: null,
+        raw: true,
+        UTC: true,
+        blankrows: true,
+        range: { s: { r: 0, c: 0 }, e: end }
+      })
     const originalRows = readRows()
     // Only propagate cells that Excel explicitly marks as merged.
     const merges = ws['!merges'] ?? []
@@ -256,7 +272,7 @@ export async function readWorkbook(file: File): Promise<Workbook> {
 }
 export function dateValue(v: Cell): string | undefined {
   if (v instanceof Date && !Number.isNaN(v.getTime()))
-    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`
+    return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, '0')}-${String(v.getUTCDate()).padStart(2, '0')}`
   const s = str(v)
   if (/^\d{4}$/.test(s) && +s >= 1400 && +s <= 2200) return s
   const fi = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/)
@@ -277,7 +293,7 @@ export function dateValue(v: Cell): string | undefined {
 function categoryOf(value: string): Category {
   const s = normalize(value)
   if (/teatter|theat|pjäs|esitys/.test(s)) return 'theatre'
-  if (/näyttely|exhibit|utställ|museo|konst/.test(s)) return 'exhibition'
+  if (/näyttely|exhibit|utställ|museo|art area/.test(s)) return 'exhibition'
   if (/muu|other|övrig|konsertti|concert/.test(s)) return 'other'
   return 'book'
 }
@@ -324,23 +340,41 @@ export function interpret(wb: Workbook, min: number, max: number, current?: Arch
           const c = col(role)
           return c === undefined ? null : (row[c] ?? null)
         }
-      const title = titleCol === undefined ? '' : str(row[titleCol]),
-        isHeader =
-          ri <= sheet.headerRow ||
-          (!!title &&
-            normalize(title) === normalize(sheet.columns.find((c) => c.index === titleCol)?.header ?? ''))
+      const rawTitle = titleCol === undefined ? '' : str(row[titleCol])
+      const mixedCreator = sheet.columns.some(
+        (c) => c.role === 'creator' && /tapahtuma/.test(normalize(c.header))
+      )
+      const eventTitle = !rawTitle && mixedCreator && dateValue(get('date')) ? str(get('creator')) : ''
+      const title = rawTitle || eventTitle
+      const summaryRow =
+        !dateValue(get('date')) &&
+        /^(yhteensä|summa|totals?|grand total|keskiarvo|average|mean|medelvärde)(?:\s|$)/.test(
+          normalize(rawTitle)
+        )
+      const hasRating = sheet.columns.some(
+        (c) => ['memberRating', 'rating', 'memberReview', 'review'].includes(c.role) && str(row[c.index])
+      )
+      const sectionRow = !title && !str(get('date')) && !hasRating
+      const isHeader =
+        ri <= sheet.headerRow ||
+        (!!title &&
+          normalize(title) === normalize(sheet.columns.find((c) => c.index === titleCol)?.header ?? ''))
       let status: AuditStatus = !sheet.enabled
         ? 'excluded'
-        : isHeader
-          ? 'header'
-          : !row.some((v) => str(v))
-            ? 'empty'
-            : !title || titleCol === undefined
-              ? 'review'
-              : 'imported'
+        : summaryRow
+          ? 'excluded'
+          : isHeader || sectionRow
+            ? 'header'
+            : !row.some((v) => str(v))
+              ? 'empty'
+              : !title || titleCol === undefined
+                ? 'review'
+                : 'imported'
       let reason =
         status === 'excluded'
-          ? 'Välilehti ei ole mukana tuonnissa.'
+          ? summaryRow
+            ? 'Yhteenvetorivi säilyy tuontihistoriassa. Summia ei tuoda arvosanoina.'
+            : 'Välilehti ei ole mukana tuonnissa.'
           : status === 'header'
             ? 'Otsikko tai sitä edeltävä rivi.'
             : status === 'empty'
@@ -367,10 +401,14 @@ export function interpret(wb: Workbook, min: number, max: number, current?: Arch
         issues.push(`${sheet.name}, rivi ${ri + 1}: ${reason}`)
       }
       if (status === 'imported') {
-        const creator = str(get('creator')),
+        const creator = eventTitle ? '' : str(get('creator')),
           rawDate = get('date'),
           date = dateValue(rawDate) ?? sheet.name.match(/(?:19|20)\d{2}/)?.[0],
-          category = categoryOf(str(get('category')) || sheet.name)
+          category = eventTitle
+            ? ('other' as const)
+            : categoryOf(
+                str(get('category')) || (mixedCreator ? `${creator} ${title} ${sheet.name}` : sheet.name)
+              )
         const dateCol = col('date')
         reliableDate =
           (!str(rawDate) || dateValue(rawDate) !== undefined) &&
@@ -557,7 +595,23 @@ export function mergeArchive(
     ids.set(m.id, old?.id ?? m.id)
     if (!old) members.push(m)
   }
-  const works = [...base.works]
+  const summaryTitles = new Set(
+    preview.rowAudit
+      .filter((row) => row.status === 'excluded' && row.reason.startsWith('Yhteenvetorivi'))
+      .map((row) => normalize(row.title))
+  )
+  const obsolete = base.works.filter(
+    (work) => work.source && !work.date && !work.ratings.length && summaryTitles.has(normalize(work.title))
+  )
+  const works = base.works.filter((work) => !obsolete.includes(work))
+  for (const work of obsolete)
+    changes.push({
+      kind: 'details',
+      title: work.title,
+      before: 'Yhteenvetorivi teosluettelossa',
+      after: 'Poistetaan teosluettelosta. Alkuperäinen rivi säilyy tuontihistoriassa.',
+      source: work.source
+    })
   let added = 0,
     updated = 0,
     newReadings = 0
@@ -566,12 +620,54 @@ export function mergeArchive(
       .filter((c) => c.status === 'review' && c.member && (c.role === 'rating' || c.role === 'memberRating'))
       .map((c) => `${c.readingId}:${normalize(c.member!)}`)
   )
+  // An earlier import may have combined identically named works after missing the author column.
+  // Reassign only scoreless, commentless source readings with one exact dated match in this import.
+  const reassigned = new Map<string, string>()
+  const originalNotes = new Map<string, string[]>()
+  for (const legacy of base.works.filter((work) => !work.creator.trim() && work.source)) {
+    for (const session of sessionsFor(legacy)) {
+      if (session.ratings.length || session.reviews.length) continue
+      const matches = preview.works.filter(
+        (work) =>
+          normalize(work.title) === normalize(legacy.title) &&
+          sessionsFor(work).some((reading) => reading.date === session.date)
+      )
+      if (matches.length !== 1) continue
+      const target = matches[0]
+      reassigned.set(`${legacy.id}:${session.id}`, target.id)
+      if (session.notes) {
+        const key = `${target.id}:${session.date ?? ''}`
+        originalNotes.set(key, [...(originalNotes.get(key) ?? []), session.notes])
+      }
+    }
+  }
   for (const incoming of preview.works) {
-    const index = works.findIndex((w) => workKey(w) === workKey(incoming)),
-      old = index < 0 ? undefined : works[index],
+    let index = works.findIndex((w) => workKey(w) === workKey(incoming))
+    if (index < 0 && incoming.creator) {
+      const matches = works
+        .map((w, i) => ({ w, i }))
+        .filter(({ w }) => !w.creator.trim() && normalize(w.title) === normalize(incoming.title) && w.source)
+      if (matches.length === 1) index = matches[0].i
+    }
+    const old = index < 0 ? undefined : works[index],
       targetId = old?.id ?? incoming.id
-    const sessions = old ? sessionsFor(old) : []
-    const start = JSON.stringify(sessions)
+    const originalSessions = old ? sessionsFor(old) : []
+    const sessions = originalSessions.filter((session) => {
+      const target = reassigned.get(`${old!.id}:${session.id}`)
+      return !target || target === incoming.id
+    })
+    const start = JSON.stringify(originalSessions)
+    for (const session of originalSessions.filter((session) => !sessions.includes(session))) {
+      const target = preview.works.find((work) => work.id === reassigned.get(`${old!.id}:${session.id}`))!
+      changes.push({
+        kind: 'details',
+        title: incoming.title,
+        date: session.date,
+        before: 'Lukukerta ilman tekijätietoa',
+        after: `Liitetään tekijään ${target.creator}`,
+        source: session.source
+      })
+    }
     if (!old) {
       added++
       changes.push({ kind: 'work', title: incoming.title, before: 'Ei arkistossa', after: 'Uusi teos' })
@@ -579,6 +675,10 @@ export function mergeArchive(
     for (const rawSession of sessionsFor(incoming)) {
       const candidate = {
         ...rawSession,
+        notes:
+          [...(originalNotes.get(`${incoming.id}:${rawSession.date ?? ''}`) ?? []), rawSession.notes]
+            .filter(Boolean)
+            .join('\n') || undefined,
         id: readingId(targetId, rawSession.date),
         ratings: rawSession.ratings.map((r) => ({
           ...r,
@@ -684,8 +784,27 @@ export function mergeArchive(
         session.notes = notes
       }
     }
-    const result = withSessions(old ?? incoming, sessions)
-    if (old && start !== JSON.stringify(sessions)) updated++
+    const detailsChanged = !!old && !old.creator.trim() && !!incoming.creator
+    if (detailsChanged)
+      changes.push({
+        kind: 'details',
+        title: incoming.title,
+        before: 'Tekijä puuttuu',
+        after: `${incoming.creator} · ${incoming.category}`,
+        source: incoming.source
+      })
+    const result = withSessions(
+      detailsChanged
+        ? {
+            ...old!,
+            creator: incoming.creator,
+            category: incoming.category,
+            publicationYear: incoming.publicationYear ?? old!.publicationYear
+          }
+        : (old ?? incoming),
+      sessions
+    )
+    if (old && (detailsChanged || start !== JSON.stringify(sessions))) updated++
     if (index < 0) works.push(result)
     else works[index] = result
   }
@@ -700,6 +819,7 @@ export function mergeArchive(
     added,
     updated,
     newReadings,
+    removed: obsolete.length,
     conflicts,
     changes
   }

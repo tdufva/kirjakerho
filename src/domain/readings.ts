@@ -1,3 +1,4 @@
+import { atlasWork } from './catalogue'
 import { stableId, type Work, type Rating } from './model'
 export interface Review {
   memberId: string
@@ -74,7 +75,7 @@ export function readingViews(works: Work[]): ReadingView[] {
     'readingId' in w
       ? [w as ReadingView]
       : sessionsFor(w).map((s) => ({
-          ...w,
+          ...atlasWork(w),
           id: s.id,
           workId: w.id,
           readingId: s.id,

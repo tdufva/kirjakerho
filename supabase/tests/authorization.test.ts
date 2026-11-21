@@ -29,8 +29,9 @@ it('round-trips reading sessions and standalone comments through existing JSONB 
  const {withSessions,readingId}=await import('../../src/domain/readings');await login(owner)
  const a=structuredClone(sample),w=a.works[0],memberId=a.members[0].id
  a.works[0]=withSessions(w,[{id:readingId(w.id,'2020'),date:'2020',ratings:[{memberId,value:8,min:1,max:10}],reviews:[{memberId,text:'Ensimmäinen keskustelu'}]},{id:readingId(w.id,'2025'),date:'2025',ratings:[{memberId,value:9,min:1,max:10}],reviews:[{memberId:a.members[1].id,text:'Kommentti ilman arvosanaa'}]}])
+ a.works[0].catalogue={source:'Finna',url:'https://www.finna.fi/Record/test',retrievedAt:'2026-11-21',themes:['Muisti'],locations:[]}
  await save(clubA,1,a)
  const stored=(await db.query<{data:typeof a.works[0]}>('select data from public.works where id=$1',[w.id])).rows[0].data
- expect(stored.readingSessions?.map(s=>s.date)).toEqual(['2020','2025']);expect(stored.readingSessions?.[1].reviews[0].text).toBe('Kommentti ilman arvosanaa')
+ expect(stored.catalogue?.themes).toEqual(['Muisti']);expect(stored.readingSessions?.map(s=>s.date)).toEqual(['2020','2025']);expect(stored.readingSessions?.[1].reviews[0].text).toBe('Kommentti ilman arvosanaa')
  expect((await db.query<{value:number}>('select value from public.ratings where work_id=$1',[w.id])).rows.map(r=>Number(r.value))).toEqual([9])
 })

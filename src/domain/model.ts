@@ -1,9 +1,10 @@
 export type Category = 'book' | 'theatre' | 'exhibition' | 'other'
 export interface Member { id: string; name: string; color: string }
 export interface Rating { memberId: string; value: number; min: number; max: number; review?: string; source?: string }
-export interface Location { name: string; country: string; lat: number; lon: number; kind: 'setting' | 'author' | 'publication' }
+export interface Location { name: string; country: string; lat: number; lon: number; kind: 'setting' | 'author' | 'publication' | 'subject' }
 export interface Metadata { source: 'Finna' | 'Open Library' | 'Google Books'; retrievedAt: string; confidence: number; externalId: string; description?: string; cover?: string; publicationYear?: number; subjects?: string[]; url: string }
 export interface Work {
+  catalogue?: import('./catalogue').Catalogue;
   readingSessions?: import('./readings').ReadingSession[];
   id: string; title: string; creator: string; category: Category; date?: string; publicationYear?: number;
   description?: string; themes: string[]; locations: Location[]; period?: string; ratings: Rating[];

@@ -9,12 +9,12 @@ const links=[['/','home',Home],['/arkisto','archive',BookOpen],['/atlas','atlas'
 export function Layout() {
  const {archive,club,notice,setNotice,online}=useArchive(),location=useLocation()
  const {needRefresh:[needRefresh],updateServiceWorker}=useRegisterSW()
- useEffect(()=>{window.scrollTo(0,0);const titles:Record<string,string>={'/':'Etusivu','/arkisto':'Arkisto','/atlas':'Atlas','/maku':'Meidän makumme','/tuonti':'Tuo Excel','/asetukset':'Asetukset'};document.title=`${titles[location.pathname]??'Teos'} — Kirjakerhon Atlas`},[location.pathname])
+ useEffect(()=>{window.scrollTo(0,0);const titles:Record<string,string>={'/':'Etusivu','/arkisto':'Arkisto','/atlas':'Atlas','/maku':'Meidän makumme','/tuonti':'Tuo arkisto','/asetukset':'Asetukset'};document.title=`${titles[location.pathname]??'Teos'} — Kirjakerhon Atlas`},[location.pathname])
  async function activateUpdate(){try{const registration=await navigator.serviceWorker.getRegistration();if(registration?.waiting){navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload(),{once:true});registration.waiting.postMessage({type:'SKIP_WAITING'})}else{await updateServiceWorker(true);window.location.reload()}}catch{setNotice('Sovelluksen päivitys ei onnistunut. Sulje Atlas ja avaa se uudelleen.')}}
  return <div className="app-shell"><a className="skip-link" href="#content">Siirry sisältöön</a>
   <header className="site-header"><Link to="/" className="brand" aria-label="Kirjakerhon Atlas, etusivu"><span className="brand-symbol" aria-hidden="true">A</span><span>KIRJAKERHON<strong>ATLAS</strong></span></Link>
    <nav aria-label="Päävalikko" className="desktop-nav">{links.map(([to,key])=><NavLink key={to} to={to} end={to==='/'}>{fi.navigation[key]}</NavLink>)}</nav>
-   <div className="header-actions"><Link className="icon-button" to="/asetukset" aria-label="Asetukset"><Settings size={22}/></Link>{(!club||canManage(club.role))&&<Link className="button button-dark header-import" to="/tuonti" aria-label="Tuo Excel-tiedosto"><Upload size={18}/><span>Tuo Excel</span></Link>}</div>
+   <div className="header-actions"><Link className="icon-button" to="/asetukset" aria-label="Asetukset"><Settings size={22}/></Link>{(!club||canManage(club.role))&&<Link className="button button-dark header-import" to="/tuonti" aria-label="Tuo Numbers- tai Excel-tiedosto"><Upload size={18}/><span>Tuo tiedosto</span></Link>}</div>
   </header>
   {(club || !online || archive.mode !== 'demo') && (
    <div className="edition-bar">

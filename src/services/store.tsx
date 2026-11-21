@@ -1,10 +1,12 @@
+import type { CatalogueUpdate } from '../domain/catalogue'
+import { workKey } from '../domain/model'
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { demoArchive } from '../data/demo'
 import type { Archive, Work } from '../domain/model'
 import { loadCache, saveCache, recovery, saveClubIndex, loadClubIndex, clearUserCache } from './cache'
 import { supabase, listClubs, fetchArchive, saveCloud, type Club } from './cloud'
-interface State {archive:Archive;ready:boolean;busy:boolean;user:User|null;clubs:Club[];club:Club|null;online:boolean;notice:string;setNotice:(s:string)=>void;save:(a:Archive)=>Promise<void>;restore:(id?:string)=>Promise<void>;selectClub:(c:Club)=>Promise<void>;refreshClubs:()=>Promise<void>;updateWork:(w:Work)=>Promise<void>;signOut:()=>Promise<void>;useLocal:()=>Promise<void>}
+interface State {applyCatalogues:(updates:CatalogueUpdate[],scope:string)=>Promise<void>;archive:Archive;ready:boolean;busy:boolean;user:User|null;clubs:Club[];club:Club|null;online:boolean;notice:string;setNotice:(s:string)=>void;save:(a:Archive)=>Promise<void>;restore:(id?:string)=>Promise<void>;selectClub:(c:Club)=>Promise<void>;refreshClubs:()=>Promise<void>;updateWork:(w:Work)=>Promise<void>;signOut:()=>Promise<void>;useLocal:()=>Promise<void>}
 const Context=createContext<State>(null!)
 export const useArchive=()=>useContext(Context)
 export function ArchiveProvider({children}:{children:ReactNode}) {
@@ -12,7 +14,7 @@ export function ArchiveProvider({children}:{children:ReactNode}) {
  const [user,setUser]=useState<User|null>(null),[clubs,setClubs]=useState<Club[]>([]),[club,setClub]=useState<Club|null>(null),[online,setOnline]=useState(navigator.onLine),[notice,setNotice]=useState('')
  const current=useRef({archive,club,user});current.current={archive,club,user}
  const cacheKey=()=>current.current.club&&current.current.user?`${current.current.user.id}:${current.current.club.id}`:'local'
- const cloudEpoch=useRef(0)
+ const cloudEpoch=useRef(0),saving=useRef(false)
  async function refreshClubs(){if(!supabase)return;const uid=current.current.user?.id;if(!uid)return;try{const rows=await listClubs();await saveClubIndex(uid,rows);setClubs(rows)}catch(e){const cached=await loadClubIndex(uid);if(cached.length)setClubs(cached);else throw e}}
  async function selectClub(c:Club) {
   const epoch=++cloudEpoch.current;setBusy(true)
@@ -26,7 +28,8 @@ export function ArchiveProvider({children}:{children:ReactNode}) {
   } catch {setNotice('Yhteistä arkistoa ei voitu päivittää. Voit lukea aiemmin tallennettua versiota.')} finally {if(epoch===cloudEpoch.current)setBusy(false)}
  }
  async function save(a:Archive) {
-  if(busy) throw new Error('Odota edellisen tallennuksen valmistumista.')
+  if(saving.current) throw new Error('Odota edellisen tallennuksen valmistumista.')
+  saving.current=true
   setBusy(true)
   try {
    const c=current.current.club
@@ -36,7 +39,20 @@ export function ArchiveProvider({children}:{children:ReactNode}) {
     a={...a,mode:'cloud'};setClub({...c,revision})
    }
    if(c){try{await saveCache(a,cacheKey())}catch{setNotice('Arkisto tallennettiin pilveen. Tämän laitteen offline-kopiota ei voitu tallentaa.')}}else await saveCache(a,cacheKey());setArchive(a)
-  } finally {setBusy(false)}
+  } finally {saving.current=false;setBusy(false)}
+ }
+ async function applyCatalogues(updates:CatalogueUpdate[],scope:string) {
+  if((current.current.club?.id??'local')!==scope) {
+   throw new Error('Arkisto vaihtui haun aikana. Käynnistä haku uudelleen tässä arkistossa.')
+  }
+  const base=current.current.archive
+  const byId=new Map(updates.map(item=>[item.id,item]))
+  const works=base.works.map(work=>{
+   const item=byId.get(work.id)
+   if(!item||item.key!==workKey(work))return work
+   return {...work,catalogue:item.catalogue,metadata:work.metadata??item.metadata}
+  })
+  await save({...base,works})
  }
  async function restore(id?:string) {const previous=await recovery(cacheKey(),id);if(!previous)throw new Error('Palautettavaa versiota ei vielä ole.');await save(previous);setNotice('Edellinen paikallisesti tallennettu versio palautettiin.')}
  async function useLocal() {++cloudEpoch.current;setClub(null);setArchive(await loadCache()??demoArchive());setNotice('Paikallinen arkisto avattu.')}
@@ -57,5 +73,5 @@ export function ArchiveProvider({children}:{children:ReactNode}) {
   const timer=setInterval(focus,60000);window.addEventListener('focus',focus);window.addEventListener('online',focus)
   return()=>{void supabase!.removeChannel(channel);clearInterval(timer);window.removeEventListener('focus',focus);window.removeEventListener('online',focus)}
  },[club?.id])
- return <Context.Provider value={{archive,ready,busy,user,clubs,club,online,notice,setNotice,save,restore,selectClub,refreshClubs,updateWork:w=>save({...archive,works:archive.works.map(x=>x.id===w.id?w:x)}),signOut,useLocal}}>{children}</Context.Provider>
+ return <Context.Provider value={{applyCatalogues,archive,ready,busy,user,clubs,club,online,notice,setNotice,save,restore,selectClub,refreshClubs,updateWork:w=>save({...archive,works:archive.works.map(x=>x.id===w.id?w:x)}),signOut,useLocal}}>{children}</Context.Provider>
 }

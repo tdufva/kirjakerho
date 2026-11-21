@@ -68,13 +68,37 @@ export function validateArchive(value: unknown): Archive {
       if (
         Math.abs(num(l.lat, 'leveysaste')) > 90 ||
         Math.abs(num(l.lon, 'pituusaste')) > 180 ||
-        !['setting', 'author', 'publication'].includes(String(l.kind))
+        !['setting', 'author', 'publication', 'subject'].includes(String(l.kind))
       )
         fail('paikka')
     }
     for (const field of ['description', 'period', 'notes', 'source', 'annotationSource'])
       optionalText(w[field], field)
     if (w.publicationYear !== undefined) num(w.publicationYear, 'julkaisuvuosi')
+    if (w.catalogue !== undefined) {
+      const catalogue = obj(w.catalogue, 'Atlas-lähdetiedot')
+      if (catalogue.source !== 'Finna') fail('Atlas-lähde')
+      text(catalogue.retrievedAt, 'Atlas-hakuaika')
+      let url: URL
+      try {
+        url = new URL(text(catalogue.url, 'Atlas-lähdelinkki'))
+      } catch {
+        fail('Atlas-lähdelinkki')
+      }
+      if (url!.protocol !== 'https:' || url!.hostname !== 'www.finna.fi') fail('Atlas-lähdelinkki')
+      array(catalogue.themes, 'Atlas-teemat').forEach((t) => text(t, 'Atlas-teema'))
+      for (const item of array(catalogue.locations, 'Atlas-maat')) {
+        const location = obj(item, 'Atlas-paikka')
+        text(location.name, 'paikka')
+        text(location.country, 'maa')
+        if (
+          Math.abs(num(location.lat, 'leveysaste')) > 90 ||
+          Math.abs(num(location.lon, 'pituusaste')) > 180 ||
+          !['setting', 'subject', 'publication'].includes(String(location.kind))
+        )
+          fail('Atlas-paikka')
+      }
+    }
     if (w.readingSessions !== undefined) {
       const sessions = array(w.readingSessions, 'lukukerrat')
       if (!sessions.length) fail('tyhjät lukukerrat')
