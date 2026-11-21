@@ -51,6 +51,10 @@ node tmp/build-club.mjs '/absolute/path/Kulttuurikerho.numbers' --enrich
 
 The builder validates meeting coverage, all 996 scores, 4–10 endpoints and recorded page totals before writing `src/data/club.json`. It uses UTC calendar dates, retains year-only values, caches API responses in ignored `tmp/club-public/finna/`, and uses reviewed matching overrides and supplements from `scripts/`. Review its unresolved report and data diff before publication. Rebuilding does not edit the source workbook.
 
+## Atlas previews
+
+Map markers and country chips, reading years and edition decades, themes, and connection nodes open an in-place book preview. It includes a short sourced description, meeting/date/pages, the group average, all four original ratings and a link to the full work page. Multi-book selections are scrollable, with a local search for larger groups. Missing ratings remain missing. The preview supports Escape, outside-click dismissal, native focus trapping/return and a bottom sheet layout on phones.
+
 ## Analyses, sharing and yearbook
 
 **Oivallukset** offers all-history and annual views: recorded pages, shared favourites, largest population standard deviation, closest reviewer pair by mean absolute difference, reviewer means, page-count/score correlation, repeat-author averages (at least three books), and subject averages (at least five books). Results identify their samples and methods. No written reviews or reader personalities are invented from numerical scores.

@@ -328,3 +328,41 @@ label{font-size:15px;gap:9px}.sort-label select{border-bottom-width:2px;backgrou
 .home-insights h2 { font-size:clamp(30px,3vw,44px);margin:10px 0 }.home-insights p { color:#c9bba8 }
 @media(max-width:760px) { .insight-grid { grid-template-columns:1fr;gap:26px }.insight-card { padding:26px 22px }.insights-toolbar,.home-insights { align-items:start;flex-direction:column }.insight-value { font-size:72px }.header-import span { display:none }.header-import { min-width:44px;padding:10px }.site-header .header-actions { gap:8px }.insight-card h2 { font-size:36px } }
 .share-image-preview { display:block;width:100%;height:auto;margin:10px auto 24px;border:3px solid #a5ab874d }
+
+/* Contextual Atlas previews retain the painted room around the selected books. */
+.atlas-popover { position:fixed;inset:auto;left:var(--popover-left,18px);top:var(--popover-top,18px);margin:0;width:min(820px,calc(100vw - 36px));max-width:none;max-height:calc(100dvh - 36px);padding:0;overflow:auto;overscroll-behavior:contain;color:var(--text);background:radial-gradient(ellipse at 15% 0%,#6e612138,transparent 65%),#20271f;border:5px solid #a5ab877d;border-radius:8px 3px 13px 4px;box-shadow:-7px 6px 0 #6e6121a0,5px -3px 0 #bc643875,0 25px 80px #000a;scrollbar-color:#a5ab87 #22281f }
+.atlas-popover::backdrop { background:#0d110d92;backdrop-filter:blur(3px) }
+.atlas-popover-heading { position:sticky;top:0;z-index:2;display:flex;align-items:start;justify-content:space-between;gap:24px;padding:24px 28px 20px;background:linear-gradient(125deg,#34382a,#22271f);border-bottom:5px solid #a5ab8755 }
+.atlas-popover-heading h2 { font-size:clamp(28px,3vw,40px);line-height:1.15;overflow-wrap:anywhere;margin:9px 0 }
+.atlas-popover-heading .eyebrow { color:#bac29b;font-size:12px;letter-spacing:1.4px }
+.atlas-popover-heading p:last-child { font-size:14px;color:#c8baa7 }
+.atlas-popover-heading .icon-button { flex-shrink:0;border:2px solid #ab93874d;border-radius:50%;background:#151b1580;color:#f3eadd }
+.atlas-popover-search { display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px 28px 0;color:#d0c2af }
+.atlas-popover-search input { font-size:16px;background:#161b15;border-width:0 0 3px;border-color:#a5ab8755 }
+.atlas-popover-books { padding:0 28px }
+.atlas-preview-book { display:grid;grid-template-columns:94px minmax(0,1fr);gap:25px;padding:28px 0 24px;border-bottom:4px solid #ab938740 }
+.atlas-preview-book:last-child { border-bottom:0 }
+.atlas-preview-cover { padding-top:3px }.atlas-preview-cover .book-cover { width:94px;height:140px;min-height:0;max-width:100%;box-shadow:3px 5px 0 #080b0866 }
+.atlas-preview-cover .cover-title { font-size:14px }.atlas-preview-cover .cover-author { font-size:8px }.atlas-preview-cover .cover-top { font-size:5px }.atlas-preview-cover .cover-art { max-height:62px }.atlas-preview-cover .cover-foot { font-size:6px }
+.atlas-preview-content { min-width:0 }.atlas-preview-content .work-creator { font-size:14px;line-height:1.5;color:#c4cba7;letter-spacing:.2px }
+.atlas-preview-content h3 { font-size:clamp(26px,2.7vw,34px);line-height:1.15;overflow-wrap:anywhere;margin:5px 0 9px }
+.atlas-preview-meta { color:#c5b7a4;font-size:14px;line-height:1.7 }
+.atlas-preview-description { color:#e3d7c7;font-size:16px;line-height:1.75;margin:16px 0 20px;overflow-wrap:anywhere }
+.atlas-preview-average { display:flex;align-items:center;gap:18px;margin:10px 0 19px;color:#dfd6a9 }
+.atlas-preview-average strong { font:500 45px/1 'Bodoni Moda',Georgia,serif;letter-spacing:-1px }.atlas-preview-average span { font-size:14px;line-height:1.5;color:#d2c5b2 }.atlas-preview-average small { display:block;font-size:13px;color:#bcae9b }
+.atlas-preview-ratings { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 }
+.atlas-preview-ratings>div { display:block;padding:10px 10px 12px;background:#151b1559;border:0;border-top:4px solid var(--reader-color);min-width:0 }
+.atlas-preview-ratings dt { color:#d4c8b6;font-size:14px;font-weight:500 }.atlas-preview-ratings dd { margin:8px 0 0;font:500 28px/1.15 'Bodoni Moda',Georgia,serif;color:#f3eadd;white-space:nowrap }
+.atlas-preview-ratings dd small { display:block;margin-top:5px;font:400 12px/1.4 'DM Sans',sans-serif;color:#c5b7a4 }
+.atlas-preview-content>.text-link { font-size:14px;margin-top:14px }.atlas-preview-empty { padding:28px 0;color:#c8baa7;font-size:16px }
+.network-chart [role=button] { cursor:pointer }.network-chart [role=button]:focus-visible { outline:none }.network-chart [role=button]:focus-visible circle { stroke:#f3eadd;stroke-width:5 }.network-chart [role=button]:hover circle { stroke:#dfd6a9;stroke-width:4 }
+.network-work-links button { min-height:48px;display:inline-flex;align-items:center;padding:15px 0;border-bottom:3px solid #776a48;color:var(--accent-gold);text-align:left;font-size:16px }
+@media(max-width:600px) {
+ .atlas-popover { left:0;top:auto;bottom:0;width:100%;max-height:calc(100dvh - 16px);border-width:5px 3px 0;border-radius:15px 8px 0 0;box-shadow:0 -5px 0 #6e6121a0,0 -20px 80px #000a;padding-bottom:env(safe-area-inset-bottom) }
+ .atlas-popover-heading { padding:20px 18px 16px;gap:12px }.atlas-popover-heading h2 { font-size:29px }.atlas-popover-heading .eyebrow { font-size:11px }.atlas-popover-heading .icon-button { min-width:44px;min-height:44px }
+ .atlas-popover-books { padding:0 18px }.atlas-popover-search { padding:12px 18px 0 }
+ .atlas-preview-book { grid-template-columns:62px minmax(0,1fr);gap:16px;padding:24px 0 }.atlas-preview-cover .book-cover { width:62px;height:96px }.atlas-preview-cover .cover-top,.atlas-preview-cover .cover-foot,.atlas-preview-cover .cover-art { display:none }.atlas-preview-cover .cover-title { font-size:11px }.atlas-preview-cover .cover-author { font-size:7px }
+ .atlas-preview-content h3 { font-size:28px }.atlas-preview-content .work-creator,.atlas-preview-meta { font-size:13px }.atlas-preview-average { margin-left:-78px;padding-left:0 }.atlas-preview-description { margin-left:-78px;margin-top:22px }.atlas-preview-ratings { margin-left:-78px;gap:7px }.atlas-preview-ratings>div { padding:10px 7px }.atlas-preview-ratings dd { font-size:25px }.atlas-preview-ratings dt { font-size:13px }.atlas-preview-content>.text-link { margin-left:-78px }
+}
+@media(prefers-reduced-motion:no-preference) { .atlas-popover[open] { animation:atlas-preview-appear .15s ease-out } @keyframes atlas-preview-appear { from { opacity:0;translate:0 8px } to { opacity:1;translate:0 0 } } }
+.network-chart [role=button]:is(:hover,:focus-visible) .network-hit-area { stroke:none }
