@@ -1,0 +1,23 @@
+{
+  "3": {
+    "themes": ["muisti", "sokeus", "todellisuus"],
+    "url": "https://netn.fi/wp-content/uploads/2012/06/netn952-12.pdf"
+  },
+  "7": {
+    "themes": ["mustasukkaisuus", "avioliitto", "uskottomuus"],
+    "countries": ["Ranska", "Yhdysvallat"],
+    "url": "https://openlibrary.org/books/OL21140922M/Wonderful_clouds"
+  },
+  "41": {
+    "themes": ["nuoruus", "musiikki", "yhteiskunnallinen murros"],
+    "countries": ["Suomi"],
+    "period": "1960-luku",
+    "url": "https://store.ellibs.com/fi/book/9789526613420/hanneksen-evankeliumi"
+  },
+  "51": { "themes": ["filosofia", "ajattelu"], "url": "https://teosofia.net/muut/kallinen-ajatuksia.htm" },
+  "59": {
+    "themes": ["runot"],
+    "url": "https://www.finna.fi/Record/anders.6b55aa3a-8b45-4e25-93df-1d1cf502810c"
+  },
+  "211": { "themes": ["kosto", "rikokset", "novellit"], "url": "https://otava.fi/kirjailijat/p-d-james/" }
+}

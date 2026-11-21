@@ -1,25 +1,174 @@
-import { Backups } from './Backups'
-import { appUrl } from '../services/urls'
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload,Mail,Smartphone,Share,PlusSquare,ArrowRight,Download,History,LogOut,Copy,Check,Users,FolderOpen,ArrowUpRight } from 'lucide-react'
+import { Smartphone, Share, PlusSquare, ArrowUpRight, BookOpen } from 'lucide-react'
 import { useArchive } from '../services/store'
-import { supabase,canManage,createClub,createInvitation,acceptInvitation } from '../services/cloud'
-import { ErrorText,Modal } from './UI'
-function downloadJSON(data:unknown,name:string){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+import { readingViews } from '../domain/readings'
+import { format } from '../domain/statistics'
 export function SettingsPage() {
- const state=useArchive(),{archive,club,user,clubs,busy}=state
- const [email,setEmail]=useState(''),[name,setName]=useState('Meidän kirjakerhomme'),[error,setError]=useState(''),[message,setMessage]=useState(''),[working,setWorking]=useState(false),[invite,setInvite]=useState(false),[inviteEmail,setInviteEmail]=useState(''),[inviteRole,setInviteRole]=useState<'member'|'reader'>('member'),[inviteUrl,setInviteUrl]=useState(''),[copied,setCopied]=useState(false)
- const token=sessionStorage.getItem('atlas-invitation')
- async function action(fn:()=>Promise<void>){setWorking(true);setError('');setMessage('');try{await fn()}catch(e){const text=e instanceof Error?e.message:'';setError(text.includes('revision_conflict')?'Arkisto muuttui toisella laitteella. Päivitä sivu ja yritä uudelleen.':text.includes('invalid_invitation')?'Kutsu ei ole voimassa tai se on osoitettu toiseen sähköpostiin.':text||'Toiminto ei onnistunut. Kokeile uudelleen.')}finally{setWorking(false)}}
- async function login(){const redirect=appUrl('/asetukset');if(token)redirect.searchParams.set('invitation',token);const {error}=await supabase!.auth.signInWithOtp({email,options:{emailRedirectTo:redirect.toString()}});if(error)throw error;setMessage('Kirjautumislinkki on lähetetty sähköpostiisi. Avaa se samalla laitteella.')}
- return <div className="page settings-page"><div className="page-top"><div><p className="eyebrow">PIDETÄÄN ATLAS AJAN TASALLA</p><h1>Meidän <em>kirjakerhomme.</em></h1></div></div>
- <div className="settings-columns"><div><section className="settings-section"><h2><FolderOpen size={25}/>Arkiston tiedot</h2><dl><div><dt>Arkisto</dt><dd>{club?.name??(archive.mode==='demo'?'Esimerkkiarkisto':'Tämän laitteen arkisto')}</dd></div><div><dt>Teoksia</dt><dd>{archive.works.length}</dd></div><div><dt>Arvioijia</dt><dd>{archive.members.length}</dd></div><div><dt>Tallennus</dt><dd>{club?'Yhteinen pilviarkisto':archive.mode==='demo'?'Kuvitteellinen esimerkki':'Tämä selain ja laite'}</dd></div></dl>{!club&&<p className="small-note">Tälle laitteelle tuotu arkisto säilyy selaimen muistissa. Selaimen tietojen poistaminen poistaa myös arkiston. Tallenna varmuuskopio talteen.</p>}
- <Link className="settings-row" to="/vuosikirja"><Download size={22}/><span>Kirjakerhon vuosikirja<small>Vuoden kirjat, kommentit ja yhteiset sävelet PDF:nä.</small></span><ArrowUpRight size={20}/></Link>{(!club||canManage(club.role))&&<><Backups/><Link className="settings-row" to="/tuonti"><Upload size={22}/><span>Päivitä tiedosto<small>Lisää lukukertoja ja päivitä arvioita.</small></span><ArrowUpRight size={20}/></Link></>}</section>
- <section className="settings-section"><h2><Users size={25}/>Yhteinen arkisto</h2>{!supabase?<div className="cloud-unconfigured"><p>Kirjakerhon pilviyhteys ei ole vielä käytössä.</p><p className="muted">Voit tutkia esimerkkiä ja tuoda Excelin tälle laitteelle. Kirjautuminen, kutsut ja yhteinen arkisto avautuvat, kun pilviyhteys on määritetty.</p></div>:!user?<form onSubmit={e=>{e.preventDefault();void action(login)}}><p>Kirjaudu sähköpostilinkillä. Salasanaa ei tarvita.</p><label>Sähköpostiosoite<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="sinä@esimerkki.fi"/></label><button className="button button-burgundy" disabled={working}><Mail size={19}/>{working?'Lähetetään…':'Lähetä kirjautumislinkki'}</button></form>:<><p className="signed-in"><span className="avatar">{user.email?.[0]?.toUpperCase()}</span>{user.email}</p>{clubs.length>1&&<label>Kirjakerho<select value={club?.id??''} onChange={e=>void state.selectClub(clubs.find(c=>c.id===e.target.value)!)}>{clubs.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}{token&&<div className="invitation-box"><h3>Liity kirjakerhoon</h3><p>Sinut on kutsuttu tutustumaan kirjakerhon yhteiseen arkistoon.</p><button className="button button-burgundy" disabled={working} onClick={()=>void action(async()=>{await acceptInvitation(token);sessionStorage.removeItem('atlas-invitation');await state.refreshClubs();setMessage('Tervetuloa kirjakerhoon!')})}>Liity mukaan<ArrowRight size={18}/></button></div>}{!clubs.length&&!token&&<form onSubmit={e=>{e.preventDefault();void action(async()=>{await createClub(name);await state.refreshClubs();setMessage('Kirjakerho on valmis. Tuo seuraavaksi yhteinen Numbers- tai Excel-arkisto.')})}}><label>Kirjakerhon nimi<input required maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></label><button className="button button-burgundy" disabled={working}>Luo kirjakerho<ArrowRight size={18}/></button></form>}{club&&canManage(club.role)&&<button className="settings-row" onClick={()=>setInvite(true)}><Mail size={22}/><span>Kutsu jäsen<small>Jaa yhteinen arkisto ystävälle.</small></span><ArrowUpRight size={20}/></button>}<button className="settings-row" onClick={()=>void action(()=>state.signOut())}><LogOut size={22}/><span>Kirjaudu ulos</span></button>{club&&<button className="text-link" onClick={()=>void state.useLocal()}>Avaa tämän laitteen arkisto</button>}</>}
- <ErrorText message={error}/>{message&&<p className="success-text" role="status"><Check size={19}/>{message}</p>}</section></div>
- <div><section className="install-panel"><span className="install-symbol"><Smartphone size={42} strokeWidth={1.4}/></span><p className="eyebrow">ATLAS KULKEE MUKANA</p><h2>Oma paikka<br/><em>kotinäytöllä.</em></h2><p>Lisää Kirjakerhon Atlas puhelimeen. Aiemmin avattu arkisto on luettavissa myös ilman verkkoa.</p><h3>iPhone ja iPad</h3><ol><li><span>1</span>Avaa sovellus Safarissa.</li><li><span>2</span>Napauta Jaa-painiketta.<Share size={20}/></li><li><span>3</span>Valitse ”Lisää Koti-valikkoon”.<PlusSquare size={20}/></li><li><span>4</span>Vahvista valitsemalla ”Lisää”.</li></ol><p className="small-note">Valikon nimi ja paikka voivat vaihdella iOS-version mukaan.</p><details><summary>Tietokoneella</summary><p>Chrome ja Edge: avaa selaimen valikko ja valitse sovelluksen asennus. Jos asennuskuvake näkyy osoiterivillä, voit käyttää myös sitä.</p></details><p className="small-note">Verkkoyhteys tarvitaan yhteisen arkiston päivittämiseen ja kirjautumiseen.</p></section></div></div>
- <section className="settings-section import-history"><h2><History size={25}/>Tuontihistoria</h2>{archive.imports.length?<div>{archive.imports.map(i=><div className="history-row" key={i.id}><div><strong>{i.filename}</strong><span>{new Date(i.at).toLocaleString('fi-FI')} · {i.added} uutta · {i.updated} päivitettyä</span></div><button className="button button-outline" onClick={()=>downloadJSON(i,`Atlas-tuonti-${i.at.slice(0,10)}.json`)}><Download size={18}/>Alkuperäiset tiedot</button></div>)}</div>:<p className="muted">Omat Excel-tuonnit näkyvät täällä. Esimerkkiarkistoa ei ole tuotu tiedostosta.</p>}</section>
- {invite&&club&&<Modal title="Kutsu jäsen" onClose={()=>setInvite(false)}><p>Kutsu on henkilökohtainen ja voimassa seitsemän päivää. Jäsen kirjautuu samalla sähköpostiosoitteella.</p><form onSubmit={e=>{e.preventDefault();void action(async()=>setInviteUrl(await createInvitation(club.id,inviteEmail,inviteRole)))}}><label>Sähköpostiosoite<input type="email" required value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)}/></label><label>Jäsenen oikeudet<select value={inviteRole} onChange={e=>setInviteRole(e.target.value as 'member'|'reader')}><option value="member">Jäsen</option><option value="reader">Vain lukuoikeus</option></select></label><button className="button button-burgundy" disabled={working}>Luo kutsulinkki<ArrowRight size={18}/></button></form>{inviteUrl&&<div className="invite-result"><label>Kutsulinkki<input readOnly value={inviteUrl}/></label><button className="button button-outline" onClick={()=>void action(async()=>{await navigator.clipboard.writeText(inviteUrl);setCopied(true)})}>{copied?<Check size={19}/>:<Copy size={19}/>}Kopioi kutsulinkki</button><p className="small-note">Lähetä linkki itse kutsutulle jäsenelle.</p></div>}<ErrorText message={error}/></Modal>}
- </div>
+  const { archive } = useArchive(),
+    info = archive.dataset!,
+    books = readingViews(archive.works).filter((w) => w.category === 'book')
+  const matched = books.filter((w) => w.metadata),
+    themes = books.filter((w) => w.themes.length),
+    countries = books.filter((w) => w.locations.some((l) => l.kind === 'subject'))
+  return (
+    <div className="page settings-page">
+      <div className="page-top">
+        <div>
+          <p className="eyebrow">KULTTUURIKERHO 1994–2024</p>
+          <h1>
+            Yhteinen <em>muistimme.</em>
+          </h1>
+        </div>
+      </div>
+      <div className="settings-columns">
+        <div>
+          <section className="settings-section">
+            <h2>
+              <BookOpen size={25} />
+              Arkiston lähde
+            </h2>
+            <p>
+              Kulttuurikerhon alkuperäinen Numbers-taulukko avautuu tässä suoraan. Jokainen kokousnumero 1–252
+              on mukana kerran. Parhaiden ja heikoimpien listojen 20 kopiota eivät kasvata tapaamisten määrää.
+            </p>
+            <dl>
+              <div>
+                <dt>Aineisto</dt>
+                <dd>{info.filename}</dd>
+              </div>
+              <div>
+                <dt>Ajanjakso</dt>
+                <dd>7.10.1994–14.9.2024</dd>
+              </div>
+              <div>
+                <dt>Tapaamiset</dt>
+                <dd>{info.meetings}</dd>
+              </div>
+              <div>
+                <dt>Kirjamerkinnät</dt>
+                <dd>{books.length}</dd>
+              </div>
+              <div>
+                <dt>Muut kulttuuritapaamiset</dt>
+                <dd>{info.meetings - books.length}</dd>
+              </div>
+              <div>
+                <dt>Arvosanat</dt>
+                <dd>{info.ratings}</dd>
+              </div>
+              <div>
+                <dt>Kirjatut sivut</dt>
+                <dd>{format(info.recordedPages, 0)}</dd>
+              </div>
+            </dl>
+            <p>
+              Tiina (T), Hilkka (H), Erkki (E) ja Jouko (J) arvioivat asteikolla 4–10. Yhteinen arvosana on
+              annettujen pisteiden keskiarvo samalla asteikolla. Yht.-sarakkeen summat säilyvät teosten
+              lähdetiedoissa. Kolme arvioimatonta tapaamista eivät laske keskiarvoa.
+            </p>
+            <p className="small-note">
+              Kahdessa lähdemerkinnässä (tapaamiset 91 ja 99) on vain vuosiluku. Päivää tai kuukautta ei ole
+              keksitty. Sivusumma kattaa 206 merkintää; Sotakummilapsen sivumäärä puuttuu alkuperäisestä.
+            </p>
+            <Link className="settings-row" to="/oivallukset">
+              <span>
+                Oivallukset ja jakokuvat<small>Suosikit, piste-erot ja yhteiset sävelet.</small>
+              </span>
+              <ArrowUpRight size={20} />
+            </Link>
+            <Link className="settings-row" to="/vuosikirja">
+              <span>
+                Kirjakerhon vuosikirja<small>Valitse vuosi ja tallenna PDF.</small>
+              </span>
+              <ArrowUpRight size={20} />
+            </Link>
+          </section>
+          <section className="settings-section">
+            <h2>Kirjojen taustatiedot</h2>
+            <p>
+              {matched.length}/{books.length} kirjamerkintää on yhdistetty Finnan tai Open Libraryn
+              kirjastotietueeseen. Teemoja on {themes.length} kirjassa ja kirjaston aiheen maita{' '}
+              {countries.length} kirjassa.
+            </p>
+            <p>
+              Jokaisen kirjan sivulla on linkki käytettyyn lähdetietueeseen. Julkaisuvuosi tarkoittaa valitun
+              kirjastopainoksen vuotta. Se ei välttämättä ole teoksen alkuperäinen ilmestymisvuosi. Kuuden
+              kirjan niukkoja asiasanoja on täydennetty teossivuilla mainituista lähteistä. Kirjaston
+              asiasanat eivät aina kuvaa tarinan tapahtumapaikkaa; maat näytetään siksi kartalla omana
+              lajinaan.
+            </p>
+            <p className="small-note">
+              Tarkistettu {info.metadataCheckedAt}. Kirjailija- ja nimikirjoitusasuja on korjattu
+              tunnistamista varten. Alkuperäiset nimisarakkeet näkyvät teossivulla.
+            </p>
+            {matched.length < books.length && (
+              <details>
+                <summary>Ilman varmistettua kirjastovastaavuutta ({books.length - matched.length})</summary>
+                {books
+                  .filter((w) => !w.metadata)
+                  .map((w) => (
+                    <p key={w.id}>
+                      <Link to={`/teos/${w.workId}`}>
+                        {w.title} · {w.creator}
+                      </Link>
+                    </p>
+                  ))}
+              </details>
+            )}
+            <details>
+              <summary>Lähteen erityistapaukset</summary>
+              {info.issues.map((x) => (
+                <p key={x.meeting}>
+                  Tapaaminen {x.meeting}: {x.message}
+                </p>
+              ))}
+            </details>
+          </section>
+        </div>
+        <section className="install-panel">
+          <span className="install-symbol">
+            <Smartphone size={42} strokeWidth={1.4} />
+          </span>
+          <p className="eyebrow">ATLAS KULKEE MUKANA</p>
+          <h2>
+            Oma paikka
+            <br />
+            <em>kotinäytöllä.</em>
+          </h2>
+          <p>
+            Lisää Kirjakerhon Atlas puhelimeen. Arkisto on luettavissa ilman verkkoa, kun sovellus on ehtinyt
+            tallentua ensimmäisellä avauskerralla.
+          </p>
+          <h3>iPhone ja iPad</h3>
+          <ol>
+            <li>
+              <span>1</span>Avaa sovellus Safarissa.
+            </li>
+            <li>
+              <span>2</span>Napauta Jaa-painiketta.
+              <Share size={20} />
+            </li>
+            <li>
+              <span>3</span>Valitse ”Lisää Koti-valikkoon”.
+              <PlusSquare size={20} />
+            </li>
+            <li>
+              <span>4</span>Vahvista valitsemalla ”Lisää”.
+            </li>
+          </ol>
+          <details>
+            <summary>Android ja tietokone</summary>
+            <p>
+              Chromessa ja Edgessä avaa selaimen valikko ja valitse sovelluksen asennus tai lisääminen
+              aloitusnäyttöön. Voit käyttää myös osoiterivin asennuskuvaketta.
+            </p>
+          </details>
+          <p className="small-note">
+            Kirjaston ulkoiset linkit ja kansikuvat tarvitsevat verkkoyhteyden. Arkisto ja analyysit ovat
+            mukana sovelluksessa.
+          </p>
+        </section>
+      </div>
+    </div>
+  )
 }

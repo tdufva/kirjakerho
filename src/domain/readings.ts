@@ -6,6 +6,9 @@ export interface Review {
   source?: string
 }
 export interface ReadingSession {
+  meetingNumber?: number
+  pageCount?: number
+  sourceTotal?: number
   id: string
   date?: string
   ratings: Rating[]
@@ -80,6 +83,9 @@ export function readingViews(works: Work[]): ReadingView[] {
           workId: w.id,
           readingId: s.id,
           date: s.date,
+          meetingNumber: s.meetingNumber ?? w.meetingNumber,
+          pageCount: s.pageCount ?? w.pageCount,
+          sourceTotal: s.sourceTotal ?? w.sourceTotal,
           ratings: s.ratings,
           reviews: s.reviews,
           notes: s.notes,

@@ -9,7 +9,7 @@ export function ArrowLink({to,children}:{to:string;children:ReactNode}) {return 
 export function SectionTitle({number,title,link,linkLabel='Katso kaikki'}:{number:string;title:string;link?:string;linkLabel?:string}) {return <div className="section-heading"><h2><span className="section-number">{number}</span>{title}</h2>{link&&<ArrowLink to={link}>{linkLabel}</ArrowLink>}</div>}
 export function Cover({work,small=false}:{work:Work;small?:boolean}) {
  const brushId=`cover-brush-${useId().replace(/:/g,'')}`
- if(work.metadata?.cover) return <div className={`book-cover external-cover ${small?'small':''}`}><img src={work.metadata.cover} alt={`${work.title}, kansikuva`} onError={e=>{e.currentTarget.style.display='none'}}/><span>{work.title}</span></div>
+ if(work.metadata?.cover) return <div className={`book-cover external-cover ${small?'small':''}`}><img src={work.metadata.cover} alt={`${work.title}, kansikuva`} loading="lazy" onError={e=>{e.currentTarget.style.display='none'}}/><span>{work.title}</span></div>
  return <div className={`book-cover motif-${work.motif} ${small?'small':''}`} style={{'--cover':jazzCoverColors[work.motif % jazzCoverColors.length],'--cover-ink':work.motif % 6===3||work.motif % 6===4?jazzPalette.shadow:jazzPalette.ivory} as React.CSSProperties} aria-hidden="true">
   <div className="cover-top"><span>KIRJAKERHON KOKOELMA</span><span>{work.publicationYear??'ATLAS'}</span></div>
   <div className="cover-author">{work.creator}</div><div className="cover-title">{work.title}</div>
@@ -24,7 +24,7 @@ export function Cover({work,small=false}:{work:Work;small?:boolean}) {
 }
 export function WorkCard({work,index}:{work:Work;index?:number}) {return <Link to={readingHref(work)} className={`work-card work-pigment-${work.motif % 6}`}>
  <div className="cover-wrap"><Cover work={work}/><span className="score-stamp"><strong>{format(average(work))}</strong><span>/ 10</span></span>{index!==undefined&&<span className="rank-number">{String(index+1).padStart(2,'0')}</span>}</div>
- <p className="work-creator">{work.creator}</p><h3>{work.title}</h3><p className="work-sub">{work.date?.slice(0,4)??'Ei päiväystä'}<span>·</span>{work.ratings.length} arviota</p>
+ <p className="work-creator">{work.creator}</p><h3>{work.title}</h3><p className="work-sub">{work.meetingNumber&&<>Nro {work.meetingNumber}<span>·</span></>}{work.date?.slice(0,4)??'Ei päiväystä'}<span>·</span>{work.ratings.length} arviota</p>
  </Link>}
 export function Modal({title,children,onClose}:{title:string;children:ReactNode;onClose:()=>void}) {
  const ref=useRef<HTMLDialogElement>(null), titleId=useId()

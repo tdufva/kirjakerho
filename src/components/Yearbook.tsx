@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Download, ArrowUpRight } from 'lucide-react'
 import { useArchive } from '../services/store'
 import { readingViews, readingHref } from '../domain/readings'
@@ -17,7 +17,10 @@ export function YearbookPage() {
     ]
       .sort()
       .reverse()
-  const [year, setYear] = useState(years[0] ?? ''),
+  const [params] = useSearchParams()
+  const [year, setYear] = useState(
+      years.includes(params.get('vuosi') ?? '') ? params.get('vuosi')! : (years[0] ?? '')
+    ),
     [notes, setNotes] = useState(false),
     [working, setWorking] = useState(false),
     [error, setError] = useState(''),
@@ -52,12 +55,10 @@ export function YearbookPage() {
         <em>jotka jäivät.</em>
       </h1>
       <p className="yearbook-lead">
-        Vuoden kirjat, lukijoiden omat sanat, yhteiset suosikit ja ihanat erimielisyydet.
+        Vuoden kirjat, alkuperäiset arvosanat, yhteiset suosikit ja suurimmat piste-erot.
       </p>
       {!years.length ? (
-        <p>
-          Vuosikirjaan tarvitaan päivätty lukukerta. <Link to="/tuonti">Tuo Excel-arkisto</Link>.
-        </p>
+        <p>Vuosikirjaan tarvitaan päivätty lukukerta. Arkistossa ei ole päivättyjä tapaamisia.</p>
       ) : (
         <>
           <div className="yearbook-layout">
@@ -108,7 +109,7 @@ export function YearbookPage() {
               {data.undated > 0 && (
                 <p className="small-note">
                   {data.undated} lukukertaa on ilman päiväystä eikä sisälly vuosikirjaan. Täydennä päiväys
-                  Excelissä ja tuo uudelleen.
+                  alkuperäiseen arkistoon.
                 </p>
               )}
               {done && <p role="status">Vuosikirja on valmis. PDF-tiedosto ladattiin selaimen latauksiin.</p>}

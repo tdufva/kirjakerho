@@ -155,7 +155,7 @@ export async function createYearbookPdf(
     22
   )
   text(
-    'Arvosanoja verrataan välillä 0–10: alkuperäisen asteikon pienin arvo vastaa nollaa ja suurin kymmentä. Kirjojen sivuilla säilyvät alkuperäiset pisteet ja asteikot.',
+    'Arvosanoja verrataan välillä 4–10: alkuperäisen asteikon pienin arvo vastaa nelosta ja suurin kymmentä. Kirjojen sivuilla säilyvät alkuperäiset pisteet ja asteikot.',
     10,
     body,
     sage,
@@ -215,7 +215,7 @@ export async function createYearbookPdf(
         review = reviewText(w, m.id)
       if (!r && !review) continue
       if (y < 155) newPage(`${w.title} · kommentit jatkuvat`)
-      text(`${m.name}${r ? `   ${format(r.value)} / ${r.max}` : '   Ei arvosanaa'}`, 19, heading, ink, 29)
+      text(`${m.name}${r ? `   ${format(r.value,2)} / ${r.max}` : '   Ei arvosanaa'}`, 19, heading, ink, 29)
       if (r) text(`Alkuperäinen asteikko ${r.min}–${r.max}`, 9, body, sage, 16)
       if (review) text(review, 11, body, ink, 18)
       else text('Kirjoitettua arviota ei ole.', 10, body, sage, 17)
